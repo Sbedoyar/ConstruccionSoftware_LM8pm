@@ -1,0 +1,10 @@
+package app.domain.models.enums;
+
+public enum RoleType {
+    BUSINESS_CUSTOMER,
+    TELLER_EMPLOYEE,
+    COMMERCIAL_EMPLOYEE,
+    COMPANY_OPERATOR,
+    COMPANY_SUPERVISOR,
+    INTERNAL_ANALYST,
+}
