@@ -5,8 +5,8 @@ import java.time.LocalDate;
 
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.TransferStatus;
-import app.domain.models.user.Customer;
-import app.domain.models.user.User;
+import app.domain.models.person.Customer;
+import app.domain.models.person.User;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

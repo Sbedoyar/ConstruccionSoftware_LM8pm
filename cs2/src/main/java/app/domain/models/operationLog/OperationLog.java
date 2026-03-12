@@ -5,7 +5,7 @@ import java.util.Map;
 
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
-import app.domain.models.user.Customer;
+import app.domain.models.person.Customer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

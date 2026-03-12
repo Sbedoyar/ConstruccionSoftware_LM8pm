@@ -1,4 +1,4 @@
-package app.domain.models.user;
+package app.domain.models.person;
 
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.UserStatus;
@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 
-public class User {
-    private long userId;
-    private Customer relatedCustomer;
+public class User extends Person{
     private String username;
     private String password;
     private RoleType systemRole;

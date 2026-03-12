@@ -1,7 +1,7 @@
 package app.domain.models.bankingProduct;
 
 import app.domain.models.enums.ProductCategory;
-import app.domain.models.user.Customer;
+import app.domain.models.person.Customer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

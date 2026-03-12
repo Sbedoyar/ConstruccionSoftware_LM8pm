@@ -1,4 +1,4 @@
-package app.domain.models.user;
+package app.domain.models.person;
 
 import lombok.Getter;
 import lombok.Setter;
