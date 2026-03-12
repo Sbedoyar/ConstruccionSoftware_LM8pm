@@ -1,5 +1,7 @@
 package app.domain.models.exceptions;
 
-public class BusinessExceptions {
-
+public class BusinessExceptions extends RuntimeException{
+    public BusinessExceptions(String message) {
+    super(message);
+    }
 }
