@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 import app.domain.models.enums.LoanStatus;
 import app.domain.models.enums.LoanType;
-import app.domain.models.person.Customer;
+import app.domain.models.person.Person;
 import app.domain.models.person.User;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,14 +16,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class Loan extends BankingProduct{
-    private int loanId;
     private LoanType loanType;
     private BigDecimal requestedAmount;
     private BigDecimal approvedAmount;
     private BigDecimal interestRate;
     private int termMonths;
-    private LoanStatus loanStatus;
-    private Customer createdBy;
+    private LoanStatus loanStatus = LoanStatus.IN_REVIEW;
+    private Person createdBy;
     private LocalDate creationDate;
     private User reviewedBy;
     private LocalDate reviewDate;

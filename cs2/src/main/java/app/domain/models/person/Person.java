@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public abstract class Person {
-    private long id;
+    private Long id;
     private String name;
     private String identificationNumber;
     private String email;

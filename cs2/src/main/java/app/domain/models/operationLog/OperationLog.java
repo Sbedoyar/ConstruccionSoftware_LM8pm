@@ -1,11 +1,11 @@
 package app.domain.models.operationLog;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
-import app.domain.models.person.Customer;
+import app.domain.models.person.User;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 public class OperationLog {
     private String logId;
     private OperationType operationType;
-    private LocalDate timestamp;
-    private Customer user;
+    private LocalDateTime timestamp;
+    private User user;
     private RoleType userRole;
     private String affectedProductId;
     private Map<String, Object> detailData;

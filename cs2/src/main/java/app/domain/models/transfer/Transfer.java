@@ -2,10 +2,11 @@ package app.domain.models.transfer;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.TransferStatus;
-import app.domain.models.person.Customer;
+
 import app.domain.models.person.User;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,9 +21,9 @@ public class Transfer {
     private BankAccount sourceAccount;
     private BankAccount targetAccount;
     private BigDecimal amount;
-    private LocalDate expirationDate;
+    private LocalDateTime expirationDate;
     private TransferStatus status;
-    private Customer createdBy;
+    private User createdBy;
     private LocalDate creationDate;
     private User reviewedBy;
     private LocalDate reviewDate;
