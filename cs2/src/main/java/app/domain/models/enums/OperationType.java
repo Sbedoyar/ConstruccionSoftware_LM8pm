@@ -1,5 +1,30 @@
 package app.domain.models.enums;
 
 public enum OperationType {
+    
+    // CUENTAS
+    ACCOUNT_CREATED,
+    ACCOUNT_BLOCKED,
+    ACCOUNT_CANCELLED,
+
+    // PRÉSTAMOS
+    LOAN_CREATED,
+    LOAN_APPROVED,
+    LOAN_REJECTED,
+    LOAN_DISBURSED,
+
+    // TRANSFERENCIAS
+    TRANSFER_CREATED,
+    TRANSFER_APPROVED,
+    TRANSFER_REJECTED,
+    TRANSFER_EXECUTED,
+    TRANSFER_EXPIRED,
+
+    // CLIENTES
+    CUSTOMER_CREATED,
+
+    //  USUARIOS
+    USER_CREATED,
+    USER_BLOCKED,
 
 }

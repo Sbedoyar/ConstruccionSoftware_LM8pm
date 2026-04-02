@@ -24,7 +24,7 @@ public class Transfer {
     private LocalDateTime expirationDate;
     private TransferStatus status;
     private User createdBy;
-    private LocalDate creationDate;
+    private LocalDateTime creationDate;
     private User reviewedBy;
     private LocalDate reviewDate;
 

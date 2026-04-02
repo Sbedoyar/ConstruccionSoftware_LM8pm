@@ -17,9 +17,11 @@ import lombok.Setter;
 public class BankAccount extends BankingProduct{
     private String accountNumber;
     private AccountType accountType;
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
     private CurrencyType currency;
     private AccountStatus accountStatus;
     private LocalDate openingDate;
+    
+    public boolean internal;
 
 }
