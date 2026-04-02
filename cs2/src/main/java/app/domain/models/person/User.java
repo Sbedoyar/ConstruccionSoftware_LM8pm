@@ -23,8 +23,4 @@ public class User extends Person{
 
     // Para empleados del banco
     private List<Customer> assignedCustomers;
-
-    // empleados de empresa
-    private BusinessCustomer company; 
-
 }
