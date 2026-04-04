@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +84,7 @@ public class ApproveTransfer {
 
         // Se registra quién aprobó y cuándo lo hizo.
         transfer.setReviewedBy(user);
-        transfer.setReviewDate(LocalDate.now());
+        transfer.setReviewDate(LocalDateTime.now());
 
         // RN-AD14:
         // Antes de ejecutar, la transferencia pasa por estado APPROVED.

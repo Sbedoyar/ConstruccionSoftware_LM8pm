@@ -1,7 +1,6 @@
 package app.domain.models.transfer;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import app.domain.models.bankingProduct.BankAccount;
@@ -26,6 +25,6 @@ public class Transfer {
     private User createdBy;
     private LocalDateTime creationDate;
     private User reviewedBy;
-    private LocalDate reviewDate;
+    private LocalDateTime reviewDate;
     private TransferType transferType;
 }

@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +80,7 @@ public class RejectTransfer {
         // Si se rechaza, el estado final debe ser REJECTED.
         transfer.setStatus(TransferStatus.REJECTED);
         transfer.setReviewedBy(user);
-        transfer.setReviewDate(LocalDate.now());
+        transfer.setReviewDate(LocalDateTime.now());
 
         transferPort.update(transfer);
 

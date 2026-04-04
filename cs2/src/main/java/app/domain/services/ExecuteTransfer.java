@@ -128,8 +128,7 @@ public class ExecuteTransfer {
         // Validación adicional:
         // Solo se puede ejecutar una transferencia que esté aprobada
         // o pendiente de ejecución directa.
-        if (transfer.getStatus() != TransferStatus.APPROVED
-                && transfer.getStatus() != TransferStatus.PENDING_APPROVAL) {
+        if (transfer.getStatus() != TransferStatus.APPROVED) {
             throw new BusinessException("La transferencia no está en un estado válido para ejecutarse");
         }
     }
