@@ -2,6 +2,7 @@ package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
@@ -66,6 +67,14 @@ public class DelegateCompanyUser {
         // Solo el supervisor de empresa puede gestionar usuarios operativos.
         validateSupervisorRole(supervisor);
 
+        // Validación adicional:
+        // El supervisor debe estar activo.
+        validateActiveUser(supervisor);
+
+        // Validación adicional:
+        // El usuario objetivo también debe estar activo para ser delegado.
+        validateActiveUser(targetUser);
+
         // Validación de tipo:
         // La entidad asociada debe ser una empresa.
         validateBusinessCustomer(customer);
@@ -75,6 +84,10 @@ public class DelegateCompanyUser {
         // RN-AD09:
         // El supervisor solo puede gestionar usuarios de su propia empresa.
         validateSupervisorCompany(supervisor, company);
+
+        // Validación adicional:
+        // No se debe convertir un usuario bancario o analista en operador de empresa.
+        validateDelegableTargetUser(targetUser);
 
         // RN-AD05:
         // El cliente empresa puede delegar permisos a usuarios operativos.
@@ -94,6 +107,15 @@ public class DelegateCompanyUser {
         }
     }
 
+    private void validateActiveUser(User user) {
+
+        // Validación adicional:
+        // El usuario no puede estar inactivo ni bloqueado.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El usuario debe estar activo para participar en este flujo");
+        }
+    }
+
     private void validateBusinessCustomer(Customer customer) {
 
         // Validación general:
@@ -110,6 +132,17 @@ public class DelegateCompanyUser {
         if (supervisor.getCustomer() == null ||
             !supervisor.getCustomer().getIdentificationNumber().equals(company.getIdentificationNumber())) {
             throw new BusinessException("El supervisor solo puede gestionar usuarios de su empresa");
+        }
+    }
+
+    private void validateDelegableTargetUser(User targetUser) {
+
+        // Validación adicional:
+        // No es correcto reasignar usuarios del banco a un rol operativo de empresa.
+        if (targetUser.getSystemRole() == RoleType.INTERNAL_ANALYST ||
+            targetUser.getSystemRole() == RoleType.TELLER_EMPLOYEE ||
+            targetUser.getSystemRole() == RoleType.COMMERCIAL_EMPLOYEE) {
+            throw new BusinessException("No se puede delegar como operador a un usuario del banco");
         }
     }
 }

@@ -13,6 +13,7 @@ import app.domain.ports.TransferPort;
 import app.domain.ports.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,12 +34,19 @@ public class RejectTransfer {
         this.operationLogPort = operationLogPort;
     }
 
+    @Transactional
     public void rejectTransfer(int transferId, String userIdentification) throws BusinessException {
 
         // Validación general:
         // El ID de la transferencia debe ser válido.
         if (transferId <= 0) {
             throw new BusinessException("El ID de la transferencia es obligatorio y debe ser mayor que cero");
+        }
+
+        // Validación general:
+        // La identificación del usuario es obligatoria.
+        if (userIdentification == null || userIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del usuario es obligatoria");
         }
 
         // Se busca la transferencia.
@@ -64,6 +72,10 @@ public class RejectTransfer {
         // RN-33 / RN-AD15:
         // Solo se puede rechazar una transferencia en espera de aprobación.
         validatePendingApprovalStatus(transfer);
+
+        // RN-17:
+        // Si la transferencia ya está vencida por tiempo, no debe rechazarse manualmente.
+        validateNotExpired(transfer);
 
         // RN-AD15:
         // Si se rechaza, el estado final debe ser REJECTED.
@@ -91,8 +103,12 @@ public class RejectTransfer {
 
         // RN-32:
         // El supervisor solo puede operar sobre productos de su empresa.
-        if (user.getCustomer() == null || sourceAccount.getOwner() == null ||
-            !user.getCustomer().getIdentificationNumber().equals(sourceAccount.getOwner().getIdentificationNumber())) {
+        if (sourceAccount == null || sourceAccount.getOwner() == null || user.getCustomer() == null) {
+            throw new BusinessException("No fue posible validar la empresa asociada a la transferencia");
+        }
+
+        if (!user.getCustomer().getIdentificationNumber()
+                .equals(sourceAccount.getOwner().getIdentificationNumber())) {
             throw new BusinessException("El supervisor solo puede rechazar transferencias de su empresa");
         }
     }
@@ -106,6 +122,16 @@ public class RejectTransfer {
         }
     }
 
+    private void validateNotExpired(Transfer transfer) {
+
+        // RN-17:
+        // Si la transferencia ya superó su fecha límite, debe pasar a vencida
+        // y no seguir por el flujo manual de rechazo.
+        if (transfer.getExpirationDate() != null && LocalDateTime.now().isAfter(transfer.getExpirationDate())) {
+            throw new BusinessException("La transferencia ya venció y no puede ser rechazada manualmente");
+        }
+    }
+
     private void registerRejectedTransferLog(User user, Transfer transfer) {
 
         // RN-20:
@@ -116,18 +142,22 @@ public class RejectTransfer {
         operationLog.setTimestamp(LocalDateTime.now());
         operationLog.setUser(user);
         operationLog.setUserRole(user.getSystemRole());
-        operationLog.setAffectedProductId(String.valueOf(transfer.getTransferId()));
+        operationLog.setAffectedProductId(transfer.getSourceAccount().getAccountNumber());
 
         Map<String, Object> detailData = new HashMap<>();
         detailData.put("transferId", transfer.getTransferId());
         detailData.put("sourceAccount", transfer.getSourceAccount().getAccountNumber());
-        detailData.put("targetAccount", transfer.getTargetAccount().getAccountNumber());
+        detailData.put("targetAccount", getTargetAccountNumber(transfer));
+        detailData.put("transferType", transfer.getTransferType() != null ? transfer.getTransferType().name() : null);
         detailData.put("amount", transfer.getAmount());
         detailData.put("previousStatus", TransferStatus.PENDING_APPROVAL.name());
         detailData.put("newStatus", TransferStatus.REJECTED.name());
 
         operationLog.setDetailData(detailData);
-
         operationLogPort.save(operationLog);
+    }
+
+    private String getTargetAccountNumber(Transfer transfer) {
+        return transfer.getTargetAccount() != null ? transfer.getTargetAccount().getAccountNumber() : null;
     }
 }

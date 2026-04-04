@@ -4,6 +4,7 @@ import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
@@ -120,6 +121,12 @@ public class FindDataForInternalAnalyst {
         User user = userPort.findByIdentificationNumber(userIdentification.trim());
         if (user == null) {
             throw new BusinessException("No existe un usuario con esa identificación");
+        }
+
+        // Validación adicional:
+        // El analista debe estar activo.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El analista interno debe estar activo para consultar esta información");
         }
 
         // RN-34 / RN-36 / RN-AD10:

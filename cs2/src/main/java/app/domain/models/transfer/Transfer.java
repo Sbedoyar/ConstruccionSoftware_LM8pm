@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.TransferStatus;
-
+import app.domain.models.enums.TransferType;
 import app.domain.models.person.User;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,5 +27,5 @@ public class Transfer {
     private LocalDateTime creationDate;
     private User reviewedBy;
     private LocalDate reviewDate;
-
+    private TransferType transferType;
 }

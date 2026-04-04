@@ -15,7 +15,9 @@ import app.domain.ports.OperationLogPort;
 import app.domain.ports.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -37,12 +39,19 @@ public class DisburseLoan {
         this.operationLogPort = operationLogPort;
     }
 
+    @Transactional
     public void disburseLoan(String loanId, String userIdentification, String accountNumber) throws BusinessException {
 
         // Validación general:
         // El ID del préstamo es obligatorio.
         if (loanId == null || loanId.trim().isEmpty()) {
             throw new BusinessException("El ID del préstamo es obligatorio");
+        }
+
+        // Validación general:
+        // La identificación del usuario es obligatoria.
+        if (userIdentification == null || userIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del usuario es obligatoria");
         }
 
         // Validación general:
@@ -58,7 +67,7 @@ public class DisburseLoan {
         }
 
         // Se busca el usuario que realiza el desembolso.
-        User user = userPort.findByIdentificationNumber(userIdentification);
+        User user = userPort.findByIdentificationNumber(userIdentification.trim());
         if (user == null) {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
@@ -86,6 +95,8 @@ public class DisburseLoan {
         // El monto aprobado debe ser mayor que cero.
         validateApprovedAmount(loan);
 
+        BigDecimal balanceBefore = account.getBalance();
+
         // RN-12:
         // El saldo de la cuenta destino debe aumentar en el monto aprobado.
         account.setBalance(account.getBalance().add(loan.getApprovedAmount()));
@@ -101,7 +112,7 @@ public class DisburseLoan {
 
         // RN-13:
         // Se debe generar un registro en la bitácora.
-        registerDisbursementLog(user, loan, account);
+        registerDisbursementLog(user, loan, account, balanceBefore);
     }
 
     private void validateInternalAnalyst(User user) {
@@ -147,7 +158,10 @@ public class DisburseLoan {
         }
     }
 
-    private void registerDisbursementLog(User user, Loan loan, BankAccount account) {
+    private void registerDisbursementLog(User user,
+                                         Loan loan,
+                                         BankAccount account,
+                                         BigDecimal balanceBefore) {
 
         // RN-13:
         // Registro obligatorio en la bitácora del desembolso.
@@ -163,8 +177,10 @@ public class DisburseLoan {
         detailData.put("loanId", loan.getLoanId());
         detailData.put("approvedAmount", loan.getApprovedAmount());
         detailData.put("disbursementAccount", account.getAccountNumber());
-        detailData.put("previousLoanStatus", LoanStatus.APPROVED);
-        detailData.put("newLoanStatus", LoanStatus.DISBURSED);
+        detailData.put("previousLoanStatus", LoanStatus.APPROVED.name());
+        detailData.put("newLoanStatus", LoanStatus.DISBURSED.name());
+        detailData.put("accountBalanceBefore", balanceBefore);
+        detailData.put("accountBalanceAfter", account.getBalance());
 
         operationLog.setDetailData(detailData);
 

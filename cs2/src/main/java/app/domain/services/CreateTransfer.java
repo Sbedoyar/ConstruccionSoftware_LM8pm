@@ -1,17 +1,25 @@
 package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.TransferStatus;
+import app.domain.models.enums.TransferType;
+import app.domain.models.enums.UserStatus;
+import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
+import app.domain.ports.OperationLogPort;
 import app.domain.ports.TransferPort;
 import app.domain.ports.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class CreateTransfer {
@@ -21,14 +29,20 @@ public class CreateTransfer {
     private final TransferPort transferPort;
     private final UserPort userPort;
     private final ExecuteTransfer executeTransfer;
+    private final OperationLogPort operationLogPort;
 
     @Autowired
-    public CreateTransfer(TransferPort transferPort, UserPort userPort, ExecuteTransfer executeTransfer) {
+    public CreateTransfer(TransferPort transferPort,
+                          UserPort userPort,
+                          ExecuteTransfer executeTransfer,
+                          OperationLogPort operationLogPort) {
         this.transferPort = transferPort;
         this.userPort = userPort;
         this.executeTransfer = executeTransfer;
+        this.operationLogPort = operationLogPort;
     }
 
+    @Transactional
     public void createTransfer(String userIdentification, Transfer transfer) throws BusinessException {
 
         // Validación general de entrada.
@@ -36,11 +50,21 @@ public class CreateTransfer {
             throw new BusinessException("La transferencia no puede ser null");
         }
 
+        // Validación general:
+        // La identificación del usuario creador es obligatoria.
+        if (userIdentification == null || userIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del usuario es obligatoria");
+        }
+
         // Se busca el usuario creador.
-        User user = userPort.findByIdentificationNumber(userIdentification);
+        User user = userPort.findByIdentificationNumber(userIdentification.trim());
         if (user == null) {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
+
+        // Validación general:
+        // El usuario creador debe estar activo.
+        validateActiveUser(user);
 
         // RN-14:
         // Toda transferencia debe tener un ID único y obligatorio.
@@ -52,12 +76,20 @@ public class CreateTransfer {
         validateAmount(transfer.getAmount());
 
         // Validación general:
+        // El tipo de transferencia es obligatorio.
+        validateTransferType(transfer);
+
+        // Validación general:
         // La cuenta origen es obligatoria.
         validateSourceAccount(transfer);
 
         // Validación general:
-        // La cuenta destino es obligatoria.
+        // Si la transferencia es interna, la cuenta destino es obligatoria.
         validateTargetAccount(transfer);
+
+        // Validación general:
+        // En una transferencia interna no tiene sentido transferir a la misma cuenta.
+        validateDifferentAccounts(transfer);
 
         // RN-21 / RN-23 / RN-30 / RN-31 / RN-AD04 / RN-AD08:
         // Se valida que el usuario tenga permisos para crear la transferencia
@@ -70,16 +102,43 @@ public class CreateTransfer {
 
         // RN-AD13:
         // Si es una transferencia empresarial y supera el umbral,
-        // queda en espera de aprobación. Si no, se ejecuta directamente.
+        // queda en espera de aprobación.
         if (requiresApproval(user, transfer.getAmount())) {
             transfer.setStatus(TransferStatus.PENDING_APPROVAL);
             transfer.setExpirationDate(LocalDateTime.now().plusHours(1));
+
+            // Se guarda primero para que exista persistencia real
+            // antes de cualquier revisión posterior.
             transferPort.save(transfer);
+
+            // RN-20:
+            // Registrar la creación de la transferencia en la bitácora.
+            registerCreatedTransferLog(user, transfer);
             return;
         }
 
+        // RN-18 / RN-19 / RN-20:
+        // Si no requiere aprobación, se registra primero la transferencia,
+        // se deja en estado APPROVED y luego se ejecuta.
+        transfer.setStatus(TransferStatus.APPROVED);
+        transfer.setExpirationDate(null);
+        transferPort.save(transfer);
+
+        // RN-20:
+        // Registrar la creación de la transferencia en la bitácora.
+        registerCreatedTransferLog(user, transfer);
+
         // Si no requiere aprobación, se ejecuta directamente.
         executeTransfer.executeTransfer(transfer, user);
+    }
+
+    private void validateActiveUser(User user) {
+
+        // Validación general:
+        // El usuario actor no puede estar inactivo ni bloqueado.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El usuario debe estar activo para crear transferencias");
+        }
     }
 
     private void validateTransferId(int transferId) {
@@ -109,15 +168,44 @@ public class CreateTransfer {
         }
     }
 
+    private void validateTransferType(Transfer transfer) {
+
+        // Validación general:
+        // El tipo de transferencia es obligatorio para saber
+        // si se acredita una cuenta interna o si la salida es externa.
+        if (transfer.getTransferType() == null) {
+            throw new BusinessException("El tipo de transferencia es obligatorio");
+        }
+    }
+
     private void validateSourceAccount(Transfer transfer) {
+
+        // Validación general:
+        // La cuenta origen es obligatoria.
         if (transfer.getSourceAccount() == null) {
             throw new BusinessException("La cuenta origen es obligatoria");
         }
     }
 
     private void validateTargetAccount(Transfer transfer) {
-        if (transfer.getTargetAccount() == null) {
-            throw new BusinessException("La cuenta destino es obligatoria");
+
+        // Validación general:
+        // Si la transferencia es interna, la cuenta destino es obligatoria.
+        if (transfer.getTransferType() == TransferType.INTERNAL && transfer.getTargetAccount() == null) {
+            throw new BusinessException("La cuenta destino es obligatoria para una transferencia interna");
+        }
+    }
+
+    private void validateDifferentAccounts(Transfer transfer) {
+
+        // Validación general:
+        // En una transferencia interna la cuenta origen y destino no pueden ser la misma.
+        if (transfer.getTransferType() == TransferType.INTERNAL &&
+            transfer.getSourceAccount().getAccountNumber() != null &&
+            transfer.getTargetAccount() != null &&
+            transfer.getTargetAccount().getAccountNumber() != null &&
+            transfer.getSourceAccount().getAccountNumber().equals(transfer.getTargetAccount().getAccountNumber())) {
+            throw new BusinessException("La cuenta origen y la cuenta destino no pueden ser la misma");
         }
     }
 
@@ -128,7 +216,7 @@ public class CreateTransfer {
         if (user.getSystemRole() == RoleType.INDIVIDUAL_CUSTOMER) {
             if (user.getCustomer() == null || transfer.getSourceAccount().getOwner() == null ||
                 !user.getCustomer().getIdentificationNumber()
-                        .equals(transfer.getSourceAccount().getOwner().getIdentificationNumber())) {
+                    .equals(transfer.getSourceAccount().getOwner().getIdentificationNumber())) {
                 throw new BusinessException("El cliente solo puede operar sus propios productos");
             }
             return;
@@ -140,7 +228,7 @@ public class CreateTransfer {
         if (user.getSystemRole() == RoleType.COMPANY_OPERATOR) {
             if (user.getCustomer() == null || transfer.getSourceAccount().getOwner() == null ||
                 !user.getCustomer().getIdentificationNumber()
-                        .equals(transfer.getSourceAccount().getOwner().getIdentificationNumber())) {
+                    .equals(transfer.getSourceAccount().getOwner().getIdentificationNumber())) {
                 throw new BusinessException("El empleado de empresa solo puede operar productos de su empresa");
             }
             return;
@@ -156,5 +244,36 @@ public class CreateTransfer {
         // que superen el umbral definido.
         return user.getSystemRole() == RoleType.COMPANY_OPERATOR &&
                amount.compareTo(APPROVAL_THRESHOLD) > 0;
+    }
+
+    private void registerCreatedTransferLog(User user, Transfer transfer) {
+
+        // RN-20:
+        // Registrar la creación de la transferencia en la bitácora.
+        // El affectedProductId se asocia a la cuenta origen para que
+        // FindCustomerHistory pueda consultar el historial por producto.
+        OperationLog operationLog = new OperationLog();
+        operationLog.setLogId("LOG-" + System.currentTimeMillis());
+        operationLog.setOperationType(OperationType.TRANSFER_CREATED);
+        operationLog.setTimestamp(LocalDateTime.now());
+        operationLog.setUser(user);
+        operationLog.setUserRole(user.getSystemRole());
+        operationLog.setAffectedProductId(transfer.getSourceAccount().getAccountNumber());
+
+        Map<String, Object> detailData = new HashMap<>();
+        detailData.put("transferId", transfer.getTransferId());
+        detailData.put("sourceAccount", transfer.getSourceAccount().getAccountNumber());
+        detailData.put("targetAccount", getTargetAccountNumber(transfer));
+        detailData.put("transferType", transfer.getTransferType().name());
+        detailData.put("amount", transfer.getAmount());
+        detailData.put("status", transfer.getStatus().name());
+        detailData.put("creationDate", transfer.getCreationDate());
+
+        operationLog.setDetailData(detailData);
+        operationLogPort.save(operationLog);
+    }
+
+    private String getTargetAccountNumber(Transfer transfer) {
+        return transfer.getTargetAccount() != null ? transfer.getTargetAccount().getAccountNumber() : null;
     }
 }

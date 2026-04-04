@@ -1,6 +1,9 @@
 package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.bankingProduct.BankAccount;
+import app.domain.models.bankingProduct.BankingProduct;
+import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.RoleType;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
@@ -37,6 +40,8 @@ public class FindCustomerHistory {
             throw new BusinessException("El ID del producto afectado es obligatorio");
         }
 
+        String normalizedProductId = affectedProductId.trim();
+
         // Se busca el usuario que realiza la consulta.
         User user = userPort.findByIdentificationNumber(userIdentification.trim());
         if (user == null) {
@@ -49,11 +54,11 @@ public class FindCustomerHistory {
 
         // RN-22 / RN-23:
         // El cliente solo puede consultar historial de productos propios.
-        validateCustomerOwnership(user, affectedProductId);
+        validateCustomerOwnership(user, normalizedProductId);
 
         // RN-22:
         // Se consultan los registros de bitácora filtrados por el producto afectado.
-        return operationLogPort.findByAffectedProductId(affectedProductId.trim());
+        return operationLogPort.findByAffectedProductId(normalizedProductId);
     }
 
     private void validateCustomerRole(User user) {
@@ -76,23 +81,24 @@ public class FindCustomerHistory {
         }
 
         boolean ownsProduct = user.getCustomer().getBankingProducts().stream()
-            .anyMatch(product -> product.getCatalog() != null &&
-                                 affectedProductId.trim().equals(resolveAffectedProductId(product)));
+            .map(this::resolveAffectedProductId)
+            .anyMatch(affectedProductId::equals);
 
         if (!ownsProduct) {
             throw new BusinessException("El cliente no puede consultar historial de productos que no le pertenecen");
         }
     }
 
-    private String resolveAffectedProductId(app.domain.models.bankingProduct.BankingProduct product) {
+    private String resolveAffectedProductId(BankingProduct product) {
 
         // Este método traduce el producto al identificador que se usa en la bitácora.
-        // Debe ajustarse según cómo estén guardando los IDs de cuentas y préstamos.
-        if (product instanceof app.domain.models.bankingProduct.BankAccount account) {
+        // Para que funcione correctamente, las bitácoras de transferencias se están
+        // asociando a la cuenta origen y no al transferId.
+        if (product instanceof BankAccount account) {
             return account.getAccountNumber();
         }
 
-        if (product instanceof app.domain.models.bankingProduct.Loan loan) {
+        if (product instanceof Loan loan) {
             return loan.getLoanId();
         }
 

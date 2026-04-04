@@ -4,18 +4,25 @@ import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.CustomerStatus;
 import app.domain.models.enums.LoanStatus;
+import app.domain.models.enums.OperationType;
 import app.domain.models.enums.ProductCategory;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
+import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
 import app.domain.ports.CustomerPort;
 import app.domain.ports.LoanPort;
+import app.domain.ports.OperationLogPort;
 import app.domain.ports.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class CreateLoan {
@@ -23,12 +30,17 @@ public class CreateLoan {
     private final LoanPort loanPort;
     private final CustomerPort customerPort;
     private final UserPort userPort;
+    private final OperationLogPort operationLogPort;
 
     @Autowired
-    public CreateLoan(LoanPort loanPort, CustomerPort customerPort, UserPort userPort) {
+    public CreateLoan(LoanPort loanPort,
+                      CustomerPort customerPort,
+                      UserPort userPort,
+                      OperationLogPort operationLogPort) {
         this.loanPort = loanPort;
         this.customerPort = customerPort;
         this.userPort = userPort;
+        this.operationLogPort = operationLogPort;
     }
 
     public void createLoan(String customerIdentification, String userIdentification, Loan loan) throws BusinessException {
@@ -39,17 +51,33 @@ public class CreateLoan {
             throw new BusinessException("El préstamo no puede ser null");
         }
 
+        // Validación general:
+        // La identificación del cliente solicitante es obligatoria.
+        if (customerIdentification == null || customerIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del cliente es obligatoria");
+        }
+
+        // Validación general:
+        // La identificación del usuario creador es obligatoria.
+        if (userIdentification == null || userIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del usuario es obligatoria");
+        }
+
         // Se busca el cliente solicitante.
-        Customer customer = customerPort.findByIdentificationNumber(customerIdentification);
+        Customer customer = customerPort.findByIdentificationNumber(customerIdentification.trim());
         if (customer == null) {
             throw new BusinessException("No existe un cliente con esa identificación");
         }
 
         // Se busca el usuario que crea la solicitud.
-        User user = userPort.findByIdentificationNumber(userIdentification);
+        User user = userPort.findByIdentificationNumber(userIdentification.trim());
         if (user == null) {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
+
+        // Validación general:
+        // El usuario actor debe estar activo.
+        validateActiveUser(user);
 
         // RN-06:
         // Todo préstamo debe estar asociado a un cliente válido y activo.
@@ -62,6 +90,11 @@ public class CreateLoan {
         // - Empleado comercial
         validateAuthorizedRole(user);
 
+        // RN-AD11 / RN-27:
+        // Además del rol, se valida que el usuario pueda crear el préstamo
+        // para ese cliente específico.
+        validateActorAccessToCustomer(user, customer);
+
         // Regla general del préstamo:
         // El identificador del préstamo es obligatorio.
         validateLoanId(loan.getLoanId());
@@ -70,7 +103,7 @@ public class CreateLoan {
         // El identificador del préstamo debe ser único.
         validateUniqueLoanId(loan.getLoanId().trim());
 
-        // Normalización del ID del préstamo
+        // Normalización del ID del préstamo.
         loan.setLoanId(loan.getLoanId().trim());
 
         // Regla general del préstamo:
@@ -100,6 +133,19 @@ public class CreateLoan {
 
         // Si todas las reglas se cumplen, se guarda el préstamo.
         loanPort.save(loan);
+
+        // RN-20:
+        // Registrar la creación de la solicitud en la bitácora.
+        registerLoanCreatedLog(user, loan);
+    }
+
+    private void validateActiveUser(User user) {
+
+        // Validación general:
+        // El usuario actor no puede estar inactivo o bloqueado.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El usuario debe estar activo para crear solicitudes de préstamo");
+        }
     }
 
     private void validateActiveCustomer(Customer customer) {
@@ -122,11 +168,39 @@ public class CreateLoan {
         }
     }
 
+    private void validateActorAccessToCustomer(User user, Customer customer) {
+
+        // RN-22 / RN-23:
+        // Si el creador es un cliente, solo puede crear préstamos para sí mismo
+        // o para su empresa asociada.
+        if (user.getSystemRole() == RoleType.INDIVIDUAL_CUSTOMER ||
+            user.getSystemRole() == RoleType.BUSINESS_CUSTOMER) {
+
+            if (user.getCustomer() == null ||
+                customer.getIdentificationNumber() == null ||
+                !customer.getIdentificationNumber().equals(user.getCustomer().getIdentificationNumber())) {
+                throw new BusinessException("El cliente solo puede crear solicitudes de préstamo para sus propios productos");
+            }
+            return;
+        }
+
+        // RN-27:
+        // Si el creador es empleado comercial, el cliente debe estar asignado.
+        if (user.getSystemRole() == RoleType.COMMERCIAL_EMPLOYEE) {
+            if (user.getAssignedCustomers() == null || user.getAssignedCustomers().stream()
+                .filter(assignedCustomer -> assignedCustomer != null)
+                .noneMatch(assignedCustomer ->
+                    customer.getIdentificationNumber().equals(assignedCustomer.getIdentificationNumber()))) {
+                throw new BusinessException("El cliente no está asignado al empleado comercial");
+            }
+        }
+    }
+
     private void validateLoanId(String loanId) {
 
         // Regla general del préstamo:
         // El ID del préstamo es obligatorio.
-        if (loanId == null) {
+        if (loanId == null || loanId.trim().isEmpty()) {
             throw new BusinessException("El ID del préstamo es obligatorio");
         }
     }
@@ -200,5 +274,30 @@ public class CreateLoan {
         if (!loan.getCatalog().isActive()) {
             throw new BusinessException("El producto del catálogo no se encuentra activo");
         }
+    }
+
+    private void registerLoanCreatedLog(User user, Loan loan) {
+
+        // RN-20:
+        // Registrar la creación de la solicitud de préstamo en la bitácora.
+        OperationLog operationLog = new OperationLog();
+        operationLog.setLogId("LOG-" + System.currentTimeMillis());
+        operationLog.setOperationType(OperationType.LOAN_CREATED);
+        operationLog.setTimestamp(LocalDateTime.now());
+        operationLog.setUser(user);
+        operationLog.setUserRole(user.getSystemRole());
+        operationLog.setAffectedProductId(loan.getLoanId());
+
+        Map<String, Object> detailData = new HashMap<>();
+        detailData.put("loanId", loan.getLoanId());
+        detailData.put("requestedAmount", loan.getRequestedAmount());
+        detailData.put("interestRate", loan.getInterestRate());
+        detailData.put("termMonths", loan.getTermMonths());
+        detailData.put("loanStatus", loan.getLoanStatus() != null ? loan.getLoanStatus().name() : null);
+        detailData.put("ownerIdentification", loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null);
+
+        operationLog.setDetailData(detailData);
+
+        operationLogPort.save(operationLog);
     }
 }

@@ -3,6 +3,7 @@ package app.domain.services;
 import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.person.User;
 import app.domain.ports.AccountPort;
 import app.domain.ports.UserPort;
@@ -41,6 +42,10 @@ public class FindAccountForTeller {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
 
+        // Validación adicional:
+        // El usuario actor debe estar activo.
+        validateActiveUser(user);
+
         // RN-24 / RN-26 / RN-AD06:
         // Solo el empleado de ventanilla puede consultar saldo y estado de cuentas
         // para propósitos de caja.
@@ -55,6 +60,15 @@ public class FindAccountForTeller {
         }
 
         return account;
+    }
+
+    private void validateActiveUser(User user) {
+
+        // Validación adicional:
+        // El usuario actor no puede estar inactivo o bloqueado.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El usuario debe estar activo para consultar cuentas");
+        }
     }
 
     private void validateTellerRole(User user) {

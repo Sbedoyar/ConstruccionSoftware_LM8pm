@@ -4,6 +4,7 @@ import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.LoanStatus;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
 import app.domain.ports.CustomerPort;
@@ -42,6 +43,10 @@ public class FindAssignedCustomer {
         if (user == null) {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
+
+        // Validación adicional:
+        // El usuario actor debe estar activo.
+        validateActiveUser(user);
 
         // RN-27 / RN-28 / RN-29:
         // Solo el empleado comercial puede consultar clientes asignados en este flujo.
@@ -87,6 +92,15 @@ public class FindAssignedCustomer {
         return foundLoan;
     }
 
+    private void validateActiveUser(User user) {
+
+        // Validación adicional:
+        // El usuario actor no puede estar inactivo o bloqueado.
+        if (user.getUserStatus() == UserStatus.INACTIVE || user.getUserStatus() == UserStatus.BLOCKED) {
+            throw new BusinessException("El empleado comercial debe estar activo para consultar clientes asignados");
+        }
+    }
+
     private void validateCommercialRole(User user) {
 
         // RN-27 / RN-28 / RN-29:
@@ -101,6 +115,7 @@ public class FindAssignedCustomer {
         // RN-27:
         // El empleado comercial solo puede acceder a clientes asignados o gestionados por él.
         if (user.getAssignedCustomers() == null || user.getAssignedCustomers().stream()
+            .filter(assignedCustomer -> assignedCustomer != null)
             .noneMatch(assignedCustomer ->
                 assignedCustomer.getIdentificationNumber().equals(customer.getIdentificationNumber()))) {
             throw new BusinessException("El cliente no está asignado al empleado comercial");

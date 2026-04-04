@@ -1,6 +1,8 @@
 package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.enums.CustomerStatus;
+import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
 import app.domain.ports.CustomerPort;
@@ -28,6 +30,10 @@ public class CreateCustomer {
             throw new BusinessException("El cliente no puede ser null");
         }
 
+        // Regla general del cliente:
+        // El nombre es obligatorio.
+        validateName(customer);
+
         // RN-01:
         // El número de identificación (DNI/Cédula/NIT) debe ser único
         // para cualquier cliente (Persona Natural o Empresa) en la base de datos.
@@ -46,17 +52,48 @@ public class CreateCustomer {
         // El número de teléfono es obligatorio y debe tener entre 7 y 15 dígitos/caracteres.
         validatePhone(customer.getPhone());
 
+        // Regla general del cliente:
+        // La dirección es obligatoria.
+        validateAddress(customer);
+
         // RN-AD03:
         // Si el cliente es persona natural, debe ser mayor de edad (mínimo 18 años).
         validateAdultCustomer(customer);
 
+        // Validación adicional:
+        // Si el cliente es empresa, debe tener representante legal.
+        validateBusinessCustomer(customer);
+
         // Normalización de datos antes de guardar.
+        customer.setName(customer.getName().trim());
         customer.setIdentificationNumber(customer.getIdentificationNumber().trim());
         customer.setEmail(customer.getEmail().trim());
         customer.setPhone(customer.getPhone().trim());
+        customer.setAddress(customer.getAddress().trim());
+
+        // Regla general del cliente:
+        // Si no se definió fecha de registro, se asigna la actual.
+        if (customer.getRegistrationDate() == null) {
+            customer.setRegistrationDate(LocalDate.now());
+        }
+
+        // Regla general del cliente:
+        // Si no se definió estado, el cliente se registra como activo.
+        if (customer.getCustomerStatus() == null) {
+            customer.setCustomerStatus(CustomerStatus.ACTIVE);
+        }
 
         // Si todas las reglas se cumplen, se guarda el cliente.
         customerPort.save(customer);
+    }
+
+    private void validateName(Customer customer) {
+
+        // Regla general del cliente:
+        // El nombre es obligatorio.
+        if (customer.getName() == null || customer.getName().trim().isEmpty()) {
+            throw new BusinessException("El nombre del cliente es obligatorio");
+        }
     }
 
     private void validateIdentification(String identificationNumber) {
@@ -112,6 +149,15 @@ public class CreateCustomer {
         }
     }
 
+    private void validateAddress(Customer customer) {
+
+        // Regla general del cliente:
+        // La dirección es obligatoria.
+        if (customer.getAddress() == null || customer.getAddress().trim().isEmpty()) {
+            throw new BusinessException("La dirección del cliente es obligatoria");
+        }
+    }
+
     private void validateAdultCustomer(Customer customer) {
 
         // RN-AD03:
@@ -131,6 +177,16 @@ public class CreateCustomer {
             if (age < 18) {
                 throw new BusinessException("El cliente persona natural debe ser mayor de edad");
             }
+        }
+    }
+
+    private void validateBusinessCustomer(Customer customer) {
+
+        // Validación adicional:
+        // Si el cliente es empresa, debe tener representante legal asociado.
+        if (customer instanceof BusinessCustomer businessCustomer &&
+            businessCustomer.getLegalRepresentative() == null) {
+            throw new BusinessException("El cliente empresa debe tener un representante legal asociado");
         }
     }
 }

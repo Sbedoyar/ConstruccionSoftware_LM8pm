@@ -9,6 +9,7 @@ import app.domain.ports.OperationLogPort;
 import app.domain.ports.TransferPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class ExpireTransfer {
         this.operationLogPort = operationLogPort;
     }
 
+    @Transactional
     public void expireTransfer(int transferId) throws BusinessException {
 
         // Validación general:
@@ -96,20 +98,24 @@ public class ExpireTransfer {
         operationLog.setUserRole(
             transfer.getCreatedBy() != null ? transfer.getCreatedBy().getSystemRole() : null
         );
-        operationLog.setAffectedProductId(String.valueOf(transfer.getTransferId()));
+        operationLog.setAffectedProductId(transfer.getSourceAccount().getAccountNumber());
 
         Map<String, Object> detailData = new HashMap<>();
         detailData.put("transferId", transfer.getTransferId());
         detailData.put("sourceAccount", transfer.getSourceAccount().getAccountNumber());
-        detailData.put("targetAccount", transfer.getTargetAccount().getAccountNumber());
+        detailData.put("targetAccount", getTargetAccountNumber(transfer));
+        detailData.put("transferType", transfer.getTransferType() != null ? transfer.getTransferType().name() : null);
         detailData.put("amount", transfer.getAmount());
         detailData.put("previousStatus", TransferStatus.PENDING_APPROVAL.name());
         detailData.put("newStatus", TransferStatus.EXPIRED.name());
         detailData.put("expirationDate", transfer.getExpirationDate());
-        detailData.put("reason", "Expired due to lack of approval within the established time");
+        detailData.put("reason", "Vencida por falta de aprobación en el tiempo establecido");
 
         operationLog.setDetailData(detailData);
-
         operationLogPort.save(operationLog);
+    }
+
+    private String getTargetAccountNumber(Transfer transfer) {
+        return transfer.getTargetAccount() != null ? transfer.getTargetAccount().getAccountNumber() : null;
     }
 }
