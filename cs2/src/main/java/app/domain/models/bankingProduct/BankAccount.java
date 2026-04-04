@@ -3,7 +3,6 @@ package app.domain.models.bankingProduct;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-//import app.domain.exceptions.BusinessExceptions;
 import app.domain.models.enums.AccountStatus;
 import app.domain.models.enums.AccountType;
 import app.domain.models.enums.CurrencyType;
