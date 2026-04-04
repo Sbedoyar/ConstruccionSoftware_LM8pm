@@ -5,6 +5,7 @@ import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.TransferStatus;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
@@ -60,6 +61,9 @@ public class RejectTransfer {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
 
+        // Validación nueva:
+        validateActiveUser(user);
+
         // RN-32 / RN-33:
         // Solo el supervisor de empresa puede aprobar o rechazar transferencias.
         validateSupervisorRole(user);
@@ -87,6 +91,12 @@ public class RejectTransfer {
         // RN-20:
         // Registrar el rechazo en la bitácora.
         registerRejectedTransferLog(user, transfer);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("El usuario no está activo para realizar esta operación");
+        }
     }
 
     private void validateSupervisorRole(User user) {

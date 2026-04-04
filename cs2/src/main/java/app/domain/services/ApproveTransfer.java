@@ -5,6 +5,7 @@ import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.TransferStatus;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
@@ -65,6 +66,8 @@ public class ApproveTransfer {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
 
+        validateActiveUser(user);
+
         // RN-32 / RN-33:
         // El supervisor de empresa es el único rol fuera del banco
         // con capacidad de aprobar transferencias.
@@ -98,6 +101,12 @@ public class ApproveTransfer {
         // RN-AD14:
         // Si se aprueba, la transferencia debe ejecutarse.
         executeTransfer.executeTransfer(transfer, user);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("El usuario no está activo para realizar esta operación");
+        }
     }
 
     private void validateSupervisorRole(User user) {

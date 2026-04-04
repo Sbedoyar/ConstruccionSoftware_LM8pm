@@ -6,6 +6,7 @@ import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
 import app.domain.ports.CustomerPort;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -146,6 +147,10 @@ public class CreateCustomer {
 
         if (normalizedPhone.length() < 7 || normalizedPhone.length() > 15) {
             throw new BusinessException("El número de teléfono debe tener entre 7 y 15 caracteres");
+        }
+        
+        if (!normalizedPhone.matches("\\d+")) {
+            throw new BusinessException("El número de teléfono solo debe contener dígitos");
         }
     }
 

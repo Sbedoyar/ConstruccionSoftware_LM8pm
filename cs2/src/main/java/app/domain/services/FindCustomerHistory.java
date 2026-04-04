@@ -5,6 +5,7 @@ import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankingProduct;
 import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.ports.OperationLogPort;
@@ -48,6 +49,8 @@ public class FindCustomerHistory {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
 
+        validateActiveUser(user);
+
         // RN-22:
         // Solo los clientes pueden consultar su propio historial de operaciones.
         validateCustomerRole(user);
@@ -59,6 +62,12 @@ public class FindCustomerHistory {
         // RN-22:
         // Se consultan los registros de bitácora filtrados por el producto afectado.
         return operationLogPort.findByAffectedProductId(normalizedProductId);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("El usuario no está activo para realizar esta operación");
+        }
     }
 
     private void validateCustomerRole(User user) {

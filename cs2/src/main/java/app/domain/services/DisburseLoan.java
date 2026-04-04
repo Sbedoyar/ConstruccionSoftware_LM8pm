@@ -7,6 +7,7 @@ import app.domain.models.enums.AccountStatus;
 import app.domain.models.enums.LoanStatus;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.ports.AccountPort;
@@ -78,6 +79,8 @@ public class DisburseLoan {
             throw new BusinessException("No existe una cuenta con ese número");
         }
 
+        validateActiveUser(user);
+
         // RN-35 / RN-37:
         // El analista interno es el rol primario para modificar el estado de los préstamos
         // y no puede modificar saldos arbitrariamente, solo como resultado de un flujo definido.
@@ -113,6 +116,12 @@ public class DisburseLoan {
         // RN-13:
         // Se debe generar un registro en la bitácora.
         registerDisbursementLog(user, loan, account, balanceBefore);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("El usuario no está activo para realizar esta operación");
+        }
     }
 
     private void validateInternalAnalyst(User user) {

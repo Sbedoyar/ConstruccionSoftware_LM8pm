@@ -1,7 +1,6 @@
 package app.domain.models.transfer;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import app.domain.models.bankingProduct.BankAccount;

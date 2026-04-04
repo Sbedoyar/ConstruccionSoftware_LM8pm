@@ -5,6 +5,7 @@ import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.LoanStatus;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
+import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.ports.LoanPort;
@@ -58,6 +59,8 @@ public class RejectLoan {
             throw new BusinessException("No existe un usuario con esa identificación");
         }
 
+        validateActiveUser(user);
+
         // RN-08 / RN-35:
         // Solo el Analista Interno puede aprobar o rechazar préstamos
         // y es el rol primario para modificar su estado.
@@ -80,6 +83,12 @@ public class RejectLoan {
         // RN-20:
         // Registrar el rechazo del préstamo en la bitácora.
         registerLoanRejectedLog(user, loan);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("El usuario no está activo para realizar esta operación");
+        }
     }
 
     private void validateInternalAnalyst(User user) {
