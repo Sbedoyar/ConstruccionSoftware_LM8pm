@@ -23,14 +23,14 @@ public class DelegateCompanyUser {
         this.customerPort = customerPort;
     }
 
-    public void delegateCompanyOperator(String supervisorIdentification,
+    public void delegateCompanyOperator(String delegatorIdentification,
                                         String targetUserIdentification,
                                         String companyIdentification) throws BusinessException {
 
         // Validación general:
-        // La identificación del supervisor es obligatoria.
-        if (supervisorIdentification == null || supervisorIdentification.trim().isEmpty()) {
-            throw new BusinessException("La identificación del supervisor es obligatoria");
+        // La identificación del usuario delegador es obligatoria.
+        if (delegatorIdentification == null || delegatorIdentification.trim().isEmpty()) {
+            throw new BusinessException("La identificación del usuario delegador es obligatoria");
         }
 
         // Validación general:
@@ -45,10 +45,10 @@ public class DelegateCompanyUser {
             throw new BusinessException("La identificación de la empresa es obligatoria");
         }
 
-        // Se busca el supervisor.
-        User supervisor = userPort.findByIdentificationNumber(supervisorIdentification.trim());
-        if (supervisor == null) {
-            throw new BusinessException("No existe un supervisor con esa identificación");
+        // Se busca el usuario delegador.
+        User delegator = userPort.findByIdentificationNumber(delegatorIdentification.trim());
+        if (delegator == null) {
+            throw new BusinessException("No existe un usuario delegador con esa identificación");
         }
 
         // Se busca el usuario que será delegado como operador.
@@ -63,13 +63,15 @@ public class DelegateCompanyUser {
             throw new BusinessException("No existe una empresa con esa identificación");
         }
 
-        // RN-AD09:
-        // Solo el supervisor de empresa puede gestionar usuarios operativos.
-        validateSupervisorRole(supervisor);
+        // RN-AD05 / RN-AD09:
+        // La delegación de usuarios operativos puede ser realizada por:
+        // - El cliente empresa administrador
+        // - El supervisor de empresa
+        validateDelegatorRole(delegator);
 
         // Validación adicional:
-        // El supervisor debe estar activo.
-        validateActiveUser(supervisor);
+        // El usuario delegador debe estar activo.
+        validateActiveUser(delegator);
 
         // Validación adicional:
         // El usuario objetivo también debe estar activo para ser delegado.
@@ -81,9 +83,9 @@ public class DelegateCompanyUser {
 
         BusinessCustomer company = (BusinessCustomer) customer;
 
-        // RN-AD09:
-        // El supervisor solo puede gestionar usuarios de su propia empresa.
-        validateSupervisorCompany(supervisor, company);
+        // RN-AD05 / RN-AD09:
+        // El delegador solo puede gestionar usuarios de la empresa a la que pertenece.
+        validateDelegatorCompany(delegator, company);
 
         // Validación adicional:
         // El usuario objetivo debe poder convertirse en operador de empresa.
@@ -98,12 +100,15 @@ public class DelegateCompanyUser {
         userPort.update(targetUser);
     }
 
-    private void validateSupervisorRole(User supervisor) {
+    private void validateDelegatorRole(User delegator) {
 
-        // RN-AD09:
-        // Solo un supervisor de empresa puede delegar usuarios operativos.
-        if (supervisor.getSystemRole() != RoleType.COMPANY_SUPERVISOR) {
-            throw new BusinessException("Solo un supervisor de empresa puede delegar usuarios operativos");
+        // RN-AD05 / RN-AD09:
+        // La delegación de usuarios operativos puede ser realizada por:
+        // - El cliente empresa administrador
+        // - El supervisor de empresa
+        if (delegator.getSystemRole() != RoleType.BUSINESS_CUSTOMER &&
+            delegator.getSystemRole() != RoleType.COMPANY_SUPERVISOR) {
+            throw new BusinessException("Solo el administrador o supervisor de empresa puede delegar usuarios operativos");
         }
     }
 
@@ -125,13 +130,13 @@ public class DelegateCompanyUser {
         }
     }
 
-    private void validateSupervisorCompany(User supervisor, BusinessCustomer company) {
+    private void validateDelegatorCompany(User delegator, BusinessCustomer company) {
 
-        // RN-AD09:
-        // El supervisor solo puede gestionar usuarios de la empresa a la que pertenece.
-        if (supervisor.getCustomer() == null ||
-            !supervisor.getCustomer().getIdentificationNumber().equals(company.getIdentificationNumber())) {
-            throw new BusinessException("El supervisor solo puede gestionar usuarios de su empresa");
+        // RN-AD05 / RN-AD09:
+        // El delegador solo puede gestionar usuarios de la empresa a la que pertenece.
+        if (delegator.getCustomer() == null ||
+            !delegator.getCustomer().getIdentificationNumber().equals(company.getIdentificationNumber())) {
+            throw new BusinessException("El usuario solo puede gestionar usuarios de su empresa");
         }
     }
 
@@ -155,6 +160,12 @@ public class DelegateCompanyUser {
         // Un supervisor de empresa no debe degradarse a operador.
         if (targetUser.getSystemRole() == RoleType.COMPANY_SUPERVISOR) {
             throw new BusinessException("No se puede delegar como operador a un supervisor de empresa");
+        }
+
+        // Validación adicional:
+        // Un administrador de empresa no debe degradarse a operador.
+        if (targetUser.getSystemRole() == RoleType.BUSINESS_CUSTOMER) {
+            throw new BusinessException("No se puede delegar como operador a un administrador de empresa");
         }
 
         // Validación adicional:

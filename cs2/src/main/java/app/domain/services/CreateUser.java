@@ -69,8 +69,14 @@ public class CreateUser {
 
         // Validación general:
         // El teléfono debe tener entre 7 y 15 caracteres.
-        if (user.getPhone().length() < 7 || user.getPhone().length() > 15) {
+        if (user.getPhone().trim().length() < 7 || user.getPhone().trim().length() > 15) {
             throw new BusinessException("El teléfono debe tener entre 7 y 15 caracteres");
+        }
+
+        // Validación general:
+        // El teléfono solo debe contener dígitos.
+        if (!user.getPhone().trim().matches("\\d+")) {
+            throw new BusinessException("El teléfono solo debe contener dígitos");
         }
 
         // Validación general:
@@ -93,7 +99,7 @@ public class CreateUser {
 
         // Regla general:
         // La identificación del usuario debe ser única.
-        if (userPort.findByIdentificationNumber(user.getIdentificationNumber()) != null) {
+        if (userPort.findByIdentificationNumber(user.getIdentificationNumber().trim()) != null) {
             throw new BusinessException("Ya existe un usuario con esa identificación");
         }
 
@@ -109,8 +115,15 @@ public class CreateUser {
         // Solo el empleado comercial puede tener clientes asignados.
         validateAssignedCustomers(user);
 
-        userPort.save(user);
+        // Normalización de datos antes de guardar.
+        user.setName(user.getName().trim());
+        user.setUsername(user.getUsername().trim());
+        user.setIdentificationNumber(user.getIdentificationNumber().trim());
+        user.setEmail(user.getEmail().trim());
+        user.setPhone(user.getPhone().trim());
+        user.setAddress(user.getAddress().trim());
 
+        userPort.save(user);
     }
 
     private void validateCustomerRequirement(User user) {
@@ -155,6 +168,15 @@ public class CreateUser {
             case INDIVIDUAL_CUSTOMER:
                 if (!(user.getCustomer() instanceof IndividualCustomer)) {
                     throw new BusinessException("El rol INDIVIDUAL_CUSTOMER debe asociarse a un cliente individual");
+                }
+
+                // Regla de consistencia:
+                // Si el usuario representa a un cliente individual,
+                // ambos deben corresponder a la misma identificación.
+                if (user.getCustomer().getIdentificationNumber() == null ||
+                    !user.getIdentificationNumber().trim()
+                        .equals(user.getCustomer().getIdentificationNumber().trim())) {
+                    throw new BusinessException("El usuario cliente individual debe tener la misma identificación que su cliente asociado");
                 }
                 break;
 

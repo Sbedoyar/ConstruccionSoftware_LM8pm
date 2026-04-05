@@ -106,6 +106,10 @@ public class CreateLoan {
         // Normalización del ID del préstamo.
         loan.setLoanId(loan.getLoanId().trim());
 
+        // Validación general:
+        // El tipo de préstamo es obligatorio.
+        validateLoanType(loan);
+
         // Regla general del préstamo:
         // El monto solicitado debe ser mayor que cero.
         validateRequestedAmount(loan.getRequestedAmount());
@@ -216,6 +220,15 @@ public class CreateLoan {
         }
     }
 
+    private void validateLoanType(Loan loan) {
+
+        // Validación general:
+        // El tipo de préstamo es obligatorio.
+        if (loan.getLoanType() == null) {
+            throw new BusinessException("El tipo de préstamo es obligatorio");
+        }
+    }
+
     private void validateRequestedAmount(BigDecimal requestedAmount) {
 
         // Regla general del préstamo:
@@ -290,6 +303,7 @@ public class CreateLoan {
 
         Map<String, Object> detailData = new HashMap<>();
         detailData.put("loanId", loan.getLoanId());
+        detailData.put("loanType", loan.getLoanType() != null ? loan.getLoanType().name() : null);
         detailData.put("requestedAmount", loan.getRequestedAmount());
         detailData.put("interestRate", loan.getInterestRate());
         detailData.put("termMonths", loan.getTermMonths());

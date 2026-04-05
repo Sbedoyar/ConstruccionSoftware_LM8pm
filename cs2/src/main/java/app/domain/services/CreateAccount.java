@@ -81,7 +81,9 @@ public class CreateAccount {
 
         // RN-02:
         // No se puede abrir una cuenta a un cliente cuyo estado esté inactivo o bloqueado.
-        // En tu modelo el estado operativo del cliente está representado por CustomerStatus.
+        // En este modelo:
+        // - UserStatus controla si el usuario puede ejecutar la operación.
+        // - CustomerStatus controla si el cliente puede recibir nuevos productos.
         validateTargetCustomerStatus(customer);
 
         // RN-24 / RN-AD07:
@@ -94,6 +96,14 @@ public class CreateAccount {
         // Cada cuenta bancaria debe tener un número de cuenta único.
         validateAccountNumber(account.getAccountNumber());
         validateUniqueAccountNumber(account.getAccountNumber().trim());
+
+        // Validación general:
+        // El tipo de cuenta es obligatorio.
+        validateAccountType(account);
+
+        // Validación general:
+        // La moneda es obligatoria.
+        validateCurrency(account);
 
         // RN-04:
         // El tipo de cuenta debe ser un valor válido del Producto Bancario General (catálogo).
@@ -180,6 +190,24 @@ public class CreateAccount {
 
         if (existingAccount != null) {
             throw new BusinessException("Ya existe una cuenta con ese número");
+        }
+    }
+
+    private void validateAccountType(BankAccount account) {
+
+        // Validación general:
+        // El tipo de cuenta es obligatorio.
+        if (account.getAccountType() == null) {
+            throw new BusinessException("El tipo de cuenta es obligatorio");
+        }
+    }
+
+    private void validateCurrency(BankAccount account) {
+
+        // Validación general:
+        // La moneda es obligatoria.
+        if (account.getCurrency() == null) {
+            throw new BusinessException("La moneda de la cuenta es obligatoria");
         }
     }
 

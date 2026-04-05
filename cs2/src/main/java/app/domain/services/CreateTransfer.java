@@ -1,6 +1,7 @@
 package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.enums.AccountStatus;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.TransferStatus;
@@ -82,6 +83,10 @@ public class CreateTransfer {
         // Validación general:
         // La cuenta origen es obligatoria.
         validateSourceAccount(transfer);
+
+        // RN-05 / RN-16:
+        // No se permiten operaciones desde cuentas bloqueadas o canceladas.
+        validateSourceAccountOperable(transfer);
 
         // Validación general:
         // Si la transferencia es interna, la cuenta destino es obligatoria.
@@ -184,6 +189,16 @@ public class CreateTransfer {
         // La cuenta origen es obligatoria.
         if (transfer.getSourceAccount() == null) {
             throw new BusinessException("La cuenta origen es obligatoria");
+        }
+    }
+
+    private void validateSourceAccountOperable(Transfer transfer) {
+
+        // RN-05 / RN-16:
+        // No se permiten transferencias desde cuentas bloqueadas o canceladas.
+        if (transfer.getSourceAccount().getAccountStatus() == AccountStatus.BLOCKED ||
+            transfer.getSourceAccount().getAccountStatus() == AccountStatus.CANCELLED) {
+            throw new BusinessException("No se permiten transferencias desde cuentas bloqueadas o canceladas");
         }
     }
 
