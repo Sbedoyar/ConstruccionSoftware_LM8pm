@@ -5,7 +5,7 @@ import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.enums.AccountStatus;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class ValidateAccountOperation {
 
     public void validateAccountOperability(BankAccount account) throws BusinessException {

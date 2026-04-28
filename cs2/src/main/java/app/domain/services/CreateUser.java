@@ -9,12 +9,12 @@ import app.domain.ports.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class CreateUser {
 
     private final UserPort userPort;
 
-    @Autowired
+    //@Autowired
     public CreateUser(UserPort userPort) {
         this.userPort = userPort;
     }

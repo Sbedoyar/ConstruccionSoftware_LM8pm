@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class CreateTransfer {
 
     private static final BigDecimal APPROVAL_THRESHOLD = new BigDecimal("10000000");
@@ -32,7 +32,7 @@ public class CreateTransfer {
     private final ExecuteTransfer executeTransfer;
     private final OperationLogPort operationLogPort;
 
-    @Autowired
+    //@Autowired
     public CreateTransfer(TransferPort transferPort,
                           UserPort userPort,
                           ExecuteTransfer executeTransfer,
@@ -43,7 +43,7 @@ public class CreateTransfer {
         this.operationLogPort = operationLogPort;
     }
 
-    @Transactional
+    //@Transactional
     public void createTransfer(String userIdentification, Transfer transfer) throws BusinessException {
 
         // Validación general de entrada.

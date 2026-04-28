@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class CreateAccount {
 
     private final AccountPort accountPort;
@@ -32,7 +32,7 @@ public class CreateAccount {
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    @Autowired
+    //@Autowired
     public CreateAccount(AccountPort accountPort,
                          CustomerPort customerPort,
                          UserPort userPort,

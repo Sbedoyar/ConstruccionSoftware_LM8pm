@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+//@Service
 public class FindCustomerHistory {
 
     private final OperationLogPort operationLogPort;
     private final UserPort userPort;
 
-    @Autowired
+    //@Autowired
     public FindCustomerHistory(OperationLogPort operationLogPort, UserPort userPort) {
         this.operationLogPort = operationLogPort;
         this.userPort = userPort;

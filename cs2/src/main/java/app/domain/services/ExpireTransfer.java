@@ -15,19 +15,19 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class ExpireTransfer {
 
     private final TransferPort transferPort;
     private final OperationLogPort operationLogPort;
 
-    @Autowired
+    //@Autowired
     public ExpireTransfer(TransferPort transferPort, OperationLogPort operationLogPort) {
         this.transferPort = transferPort;
         this.operationLogPort = operationLogPort;
     }
 
-    @Transactional
+    //@Transactional
     public void expireTransfer(int transferId) throws BusinessException {
 
         // Validación general:

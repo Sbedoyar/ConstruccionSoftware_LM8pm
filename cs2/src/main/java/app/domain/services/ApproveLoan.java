@@ -19,14 +19,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class ApproveLoan {
 
     private final LoanPort loanPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    @Autowired
+    //@Autowired
     public ApproveLoan(LoanPort loanPort, UserPort userPort, OperationLogPort operationLogPort) {
         this.loanPort = loanPort;
         this.userPort = userPort;

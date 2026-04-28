@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+//@Service
 public class ApproveTransfer {
 
     private final TransferPort transferPort;
@@ -28,7 +28,7 @@ public class ApproveTransfer {
     private final ExecuteTransfer executeTransfer;
     private final OperationLogPort operationLogPort;
 
-    @Autowired
+    //@Autowired
     public ApproveTransfer(TransferPort transferPort,
                            UserPort userPort,
                            ExecuteTransfer executeTransfer,
@@ -39,7 +39,7 @@ public class ApproveTransfer {
         this.operationLogPort = operationLogPort;
     }
 
-    @Transactional
+    //@Transactional
     public void approveTransfer(int transferId, String userIdentification) throws BusinessException {
 
         // Validación general:

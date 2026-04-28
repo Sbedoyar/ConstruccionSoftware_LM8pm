@@ -246,3 +246,28 @@ Actualmente el proyecto se encuentra enfocado en la construcción del dominio, l
 - Este repositorio corresponde a una entrega académica.
 - La solución se encuentra en evolución conforme al avance del curso.
 - Algunas capas de infraestructura, persistencia y configuración pueden ampliarse en etapas posteriores del desarrollo.
+
+Ejecutar
+.\mvnw.cmd spring-boot:run
+.\mvnw.cmd clean spring-boot:run Reforzar recompilacion
+Debo estar en la carpeta donde esta mvnw, pom mvnw.cmd
+cd .\cs2
+
+En postman
+LocalHost
+
+Prueba 1
+GET http://localhost:8080/commercial/ping
+
+Prueba 2
+POST http://localhost:8080/commercial/customers/individual
+
+Enviar 
+{
+  "name": "Jheferson Ortiz",
+  "identificationNumber": "123456789",
+  "email": "jheferson@gmail.com",
+  "phone": "3001234567",
+  "address": "Medellin",
+  "dateOfBirth": "2000-05-10"
+}
