@@ -9,9 +9,10 @@ import app.domain.models.enums.TransferType;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
-import app.domain.ports.AccountPort;
-import app.domain.ports.OperationLogPort;
-import app.domain.ports.TransferPort;
+import app.domain.ports.out.AccountPort;
+import app.domain.ports.out.OperationLogPort;
+import app.domain.ports.out.TransferPort;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

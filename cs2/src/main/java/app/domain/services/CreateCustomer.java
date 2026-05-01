@@ -5,7 +5,7 @@ import app.domain.models.enums.CustomerStatus;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
-import app.domain.ports.CustomerPort;
+import app.domain.ports.out.CustomerPort;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

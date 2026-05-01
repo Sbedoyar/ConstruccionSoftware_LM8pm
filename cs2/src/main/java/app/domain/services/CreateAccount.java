@@ -12,10 +12,11 @@ import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
-import app.domain.ports.AccountPort;
-import app.domain.ports.CustomerPort;
-import app.domain.ports.OperationLogPort;
-import app.domain.ports.UserPort;
+import app.domain.ports.out.AccountPort;
+import app.domain.ports.out.CustomerPort;
+import app.domain.ports.out.OperationLogPort;
+import app.domain.ports.out.UserPort;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class CreateAccount {
 
     private final AccountPort accountPort;
@@ -32,7 +33,7 @@ public class CreateAccount {
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public CreateAccount(AccountPort accountPort,
                          CustomerPort customerPort,
                          UserPort userPort,

@@ -7,7 +7,8 @@ import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
-import app.domain.ports.OperationLogPort;
+import app.domain.ports.out.OperationLogPort;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

@@ -5,16 +5,17 @@ import app.domain.models.enums.RoleType;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.IndividualCustomer;
 import app.domain.models.person.User;
-import app.domain.ports.UserPort;
+import app.domain.ports.out.UserPort;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//@Service
+@Service
 public class CreateUser {
 
     private final UserPort userPort;
 
-    //@Autowired
+    @Autowired
     public CreateUser(UserPort userPort) {
         this.userPort = userPort;
     }
@@ -101,6 +102,12 @@ public class CreateUser {
         // La identificación del usuario debe ser única.
         if (userPort.findByIdentificationNumber(user.getIdentificationNumber().trim()) != null) {
             throw new BusinessException("Ya existe un usuario con esa identificación");
+        }
+
+        // Regla general:
+        // El username debe ser único.
+        if (userPort.findByUsername(user.getUsername().trim()) != null) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de usuario");
         }
 
         // Regla de relación:

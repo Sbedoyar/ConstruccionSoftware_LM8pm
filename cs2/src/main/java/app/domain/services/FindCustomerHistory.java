@@ -8,8 +8,9 @@ import app.domain.models.enums.RoleType;
 import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.User;
-import app.domain.ports.OperationLogPort;
-import app.domain.ports.UserPort;
+import app.domain.ports.out.OperationLogPort;
+import app.domain.ports.out.UserPort;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
