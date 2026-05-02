@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class DisburseLoan {
 
     private final LoanPort loanPort;
@@ -33,7 +33,7 @@ public class DisburseLoan {
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public DisburseLoan(LoanPort loanPort, AccountPort accountPort, UserPort userPort, OperationLogPort operationLogPort) {
         this.loanPort = loanPort;
         this.accountPort = accountPort;
@@ -41,9 +41,8 @@ public class DisburseLoan {
         this.operationLogPort = operationLogPort;
     }
 
-    //@Transactional
+    @Transactional
     public void disburseLoan(String loanId, String userIdentification, String accountNumber) throws BusinessException {
-
         // Validación general:
         // El ID del préstamo es obligatorio.
         if (loanId == null || loanId.trim().isEmpty()) {

@@ -40,4 +40,13 @@ public class UserEntity {
 
     @Column(name = "user_status", nullable = false)
     private String userStatus;
+
+    @Column(name = "assigned_customer_identifications")
+    private String assignedCustomerIdentifications;
+
+    @Column(name = "customer_identification")
+    private String customerIdentification;
+
+    @Column(name = "customer_type")
+    private String customerType;
 }

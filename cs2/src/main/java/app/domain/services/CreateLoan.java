@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class CreateLoan {
 
     private final LoanPort loanPort;
@@ -33,7 +33,7 @@ public class CreateLoan {
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public CreateLoan(LoanPort loanPort,
                       CustomerPort customerPort,
                       UserPort userPort,

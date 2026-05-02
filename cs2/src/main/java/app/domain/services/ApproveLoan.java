@@ -15,27 +15,27 @@ import app.domain.ports.out.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class ApproveLoan {
 
     private final LoanPort loanPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public ApproveLoan(LoanPort loanPort, UserPort userPort, OperationLogPort operationLogPort) {
         this.loanPort = loanPort;
         this.userPort = userPort;
         this.operationLogPort = operationLogPort;
     }
 
-    public void approveLoan(String loanId, String userIdentification) throws BusinessException {
-
+    public void approveLoan(String loanId, String userIdentification, BigDecimal approvedAmount) throws BusinessException {
         // Validación general:
         // El ID del préstamo es obligatorio.
         if (loanId == null || loanId.trim().isEmpty()) {
@@ -70,6 +70,8 @@ public class ApproveLoan {
         // RN-07:
         // Un préstamo solo puede pasar de "En estudio" a "Aprobado" o "Rechazado".
         validateLoanInReview(loan);
+
+        loan.setApprovedAmount(approvedAmount);
 
         // RN-11:
         // Para aprobar formalmente, el monto aprobado debe ser mayor que cero.

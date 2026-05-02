@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-//@Service
+@Service
 public class FindDataForInternalAnalyst {
 
     private final UserPort userPort;
@@ -31,7 +31,7 @@ public class FindDataForInternalAnalyst {
     private final TransferPort transferPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public FindDataForInternalAnalyst(UserPort userPort,
                                       CustomerPort customerPort,
                                       AccountPort accountPort,

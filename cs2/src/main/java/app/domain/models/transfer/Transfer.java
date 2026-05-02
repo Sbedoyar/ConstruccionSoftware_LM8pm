@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class Transfer {
-    private int transferId;
+    private Integer transferId;
     private BankAccount sourceAccount;
     private BankAccount targetAccount;
     private BigDecimal amount;

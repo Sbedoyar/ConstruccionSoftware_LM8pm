@@ -22,21 +22,21 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class ExecuteTransfer {
 
     private final AccountPort accountPort;
     private final TransferPort transferPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public ExecuteTransfer(AccountPort accountPort, TransferPort transferPort, OperationLogPort operationLogPort) {
         this.accountPort = accountPort;
         this.transferPort = transferPort;
         this.operationLogPort = operationLogPort;
     }
 
-    //@Transactional
+    @Transactional
     public void executeTransfer(Transfer transfer, User user) throws BusinessException {
 
         // Validación general de entrada.

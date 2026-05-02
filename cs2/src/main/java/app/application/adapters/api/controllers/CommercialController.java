@@ -3,18 +3,24 @@ package app.application.adapters.api.controllers;
 import app.application.adapters.api.request.AccountRequest;
 import app.application.adapters.api.request.BusinessCustomerRequest;
 import app.application.adapters.api.request.IndividualCustomerRequest;
+import app.application.adapters.api.request.LoanRequest;
 import app.application.adapters.api.response.AccountResponse;
+import app.application.adapters.api.response.AssignedCustomerResponse;
 import app.application.adapters.api.response.BusinessCustomerResponse;
 import app.application.adapters.api.response.CustomerResponse;
+import app.application.adapters.api.response.LoanResponse;
 import app.application.usecases.CommercialUseCase;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankProductCatalog;
+import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.ProductCategory;
 import app.domain.models.person.BusinessCustomer;
+import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
 import jakarta.validation.Valid;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -78,6 +84,36 @@ public class CommercialController {
                 .body(toAccountResponse(account));
     }
 
+    @PostMapping("/loans")
+    public ResponseEntity<LoanResponse> createLoan(
+            @Valid @RequestBody LoanRequest request) {
+
+        Loan loan = toLoan(request);
+
+        commercialUseCase.createLoan(
+                request.getCustomerIdentification(),
+                request.getUserIdentification(),
+                loan
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(toLoanResponse(loan));
+    }
+
+    @GetMapping("/customers/assigned/{customerIdentification}")
+    public ResponseEntity<AssignedCustomerResponse> findAssignedCustomer(
+            @PathVariable String customerIdentification,
+            @RequestParam String userIdentification) {
+
+        Customer customer = commercialUseCase.findAssignedCustomer(
+                userIdentification,
+                customerIdentification
+        );
+
+        return ResponseEntity.ok(toAssignedCustomerResponse(customer));
+    }
+
     private static IndividualCustomer toIndividualCustomer(IndividualCustomerRequest request) {
         IndividualCustomer customer = new IndividualCustomer();
         customer.setName(request.getName());
@@ -104,7 +140,7 @@ public class CommercialController {
         customer.setLegalRepresentative(legalRepresentative);
         return customer;
     }
-        private static BankAccount toBankAccount(AccountRequest request) {
+    private static BankAccount toBankAccount(AccountRequest request) {
         BankAccount account = new BankAccount();
 
         account.setAccountNumber(request.getAccountNumber());
@@ -131,6 +167,65 @@ public class CommercialController {
 
         return account;
     }
+
+    private static Loan toLoan(LoanRequest request) {
+        Loan loan = new Loan();
+
+        loan.setLoanId(request.getLoanId());
+        loan.setLoanType(request.getLoanType());
+        loan.setRequestedAmount(request.getRequestedAmount());
+        loan.setInterestRate(request.getInterestRate());
+        loan.setTermMonths(request.getTermMonths());
+
+        BankProductCatalog catalog = new BankProductCatalog();
+        catalog.setProductCode(request.getProductCode());
+        catalog.setProductName(request.getProductName());
+        catalog.setDescription(request.getProductDescription());
+        catalog.setCategory(ProductCategory.LOAN);
+        catalog.setRequiresApproval(
+                request.getRequiresApproval() != null && request.getRequiresApproval()
+        );
+        catalog.setActive(true);
+
+        loan.setCatalog(catalog);
+
+        return loan;
+    }
+
+    private static AssignedCustomerResponse toAssignedCustomerResponse(Customer customer) {
+        String customerType = "INDIVIDUAL";
+        LocalDate dateOfBirth = null;
+        String legalRepresentativeName = null;
+        String legalRepresentativeIdentification = null;
+
+        if (customer instanceof IndividualCustomer individualCustomer) {
+            dateOfBirth = individualCustomer.getDateOfBirth();
+        }
+
+        if (customer instanceof BusinessCustomer businessCustomer) {
+            customerType = "BUSINESS";
+
+            if (businessCustomer.getLegalRepresentative() != null) {
+                legalRepresentativeName = businessCustomer.getLegalRepresentative().getName();
+                legalRepresentativeIdentification = businessCustomer.getLegalRepresentative().getIdentificationNumber();
+            }
+        }
+
+        return new AssignedCustomerResponse(
+                customerType,
+                customer.getName(),
+                customer.getIdentificationNumber(),
+                customer.getEmail(),
+                customer.getPhone(),
+                customer.getAddress(),
+                customer.getRegistrationDate(),
+                customer.getCustomerStatus(),
+                dateOfBirth,
+                legalRepresentativeName,
+                legalRepresentativeIdentification
+        );
+    }
+
 
     private static CustomerResponse toCustomerResponse(IndividualCustomer customer) {
         return new CustomerResponse(
@@ -174,6 +269,23 @@ public class CommercialController {
                 account.getOwner() != null ? account.getOwner().getIdentificationNumber() : null,
                 account.getCatalog() != null ? account.getCatalog().getProductCode() : null,
                 account.getCatalog() != null ? account.getCatalog().getProductName() : null
+        );
+    }
+
+    private static LoanResponse toLoanResponse(Loan loan) {
+        return new LoanResponse(
+                loan.getLoanId(),
+                loan.getLoanType(),
+                loan.getRequestedAmount(),
+                loan.getApprovedAmount(),
+                loan.getInterestRate(),
+                loan.getTermMonths(),
+                loan.getLoanStatus(),
+                loan.getCreationDate(),
+                loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
+                loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null
         );
     }
 }

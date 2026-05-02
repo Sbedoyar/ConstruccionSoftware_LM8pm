@@ -13,13 +13,13 @@ import app.domain.ports.out.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//@Service
+@Service
 public class FindAssignedCustomer {
 
     private final CustomerPort customerPort;
     private final UserPort userPort;
 
-    //@Autowired
+    @Autowired
     public FindAssignedCustomer(CustomerPort customerPort, UserPort userPort) {
         this.customerPort = customerPort;
         this.userPort = userPort;

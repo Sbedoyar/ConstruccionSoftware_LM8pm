@@ -8,6 +8,7 @@ import app.domain.models.transfer.Transfer;
 import app.domain.ports.out.OperationLogPort;
 import app.domain.ports.out.TransferPort;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,19 +17,19 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class ExpireTransfer {
 
     private final TransferPort transferPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public ExpireTransfer(TransferPort transferPort, OperationLogPort operationLogPort) {
         this.transferPort = transferPort;
         this.operationLogPort = operationLogPort;
     }
 
-    //@Transactional
+    @Transactional
     public void expireTransfer(int transferId) throws BusinessException {
 
         // Validación general:
@@ -62,6 +63,17 @@ public class ExpireTransfer {
         // Registrar el vencimiento en la bitácora.
         registerExpiredTransferLog(transfer);
     }
+
+    @Transactional
+    public void expirePendingTransfers() {
+        List<Transfer> expiredTransfers =
+                transferPort.findExpiredPendingTransfers(LocalDateTime.now());
+
+        for (Transfer transfer : expiredTransfers) {
+            expireTransfer(transfer.getTransferId());
+        }
+    }
+
 
     private void validatePendingApprovalStatus(Transfer transfer) {
 

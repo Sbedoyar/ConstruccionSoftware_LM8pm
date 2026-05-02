@@ -21,21 +21,21 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class RejectTransfer {
 
     private final TransferPort transferPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public RejectTransfer(TransferPort transferPort, UserPort userPort, OperationLogPort operationLogPort) {
         this.transferPort = transferPort;
         this.userPort = userPort;
         this.operationLogPort = operationLogPort;
     }
 
-    //@Transactional
+    @Transactional
     public void rejectTransfer(int transferId, String userIdentification) throws BusinessException {
 
         // Validación general:

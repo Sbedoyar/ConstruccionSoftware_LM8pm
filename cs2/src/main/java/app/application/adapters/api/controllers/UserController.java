@@ -3,6 +3,9 @@ package app.application.adapters.api.controllers;
 import app.application.adapters.api.request.UserRequest;
 import app.application.adapters.api.response.UserResponse;
 import app.application.usecases.UserUseCase;
+import app.domain.models.enums.RoleType;
+import app.domain.models.person.BusinessCustomer;
+import app.domain.models.person.IndividualCustomer;
 import app.domain.models.person.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -42,8 +45,32 @@ public class UserController {
         user.setPassword(request.getPassword());
         user.setSystemRole(request.getSystemRole());
         user.setUserStatus(request.getUserStatus());
+        assignCustomerToUser(user, request.getCustomerIdentification());
 
         return user;
+    }
+
+
+    private static void assignCustomerToUser(User user, String customerIdentification) {
+        if (customerIdentification == null || customerIdentification.trim().isEmpty()) {
+            return;
+        }
+
+        if (user.getSystemRole() == RoleType.INDIVIDUAL_CUSTOMER) {
+            IndividualCustomer customer = new IndividualCustomer();
+            customer.setIdentificationNumber(customerIdentification.trim());
+            user.setCustomer(customer);
+            return;
+        }
+
+        if (user.getSystemRole() == RoleType.BUSINESS_CUSTOMER ||
+                user.getSystemRole() == RoleType.COMPANY_OPERATOR ||
+                user.getSystemRole() == RoleType.COMPANY_SUPERVISOR) {
+
+            BusinessCustomer customer = new BusinessCustomer();
+            customer.setIdentificationNumber(customerIdentification.trim());
+            user.setCustomer(customer);
+        }
     }
 
     private static UserResponse toUserResponse(User user) {

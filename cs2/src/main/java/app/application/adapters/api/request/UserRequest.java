@@ -38,4 +38,6 @@ public class UserRequest {
     private RoleType systemRole;
 
     private UserStatus userStatus;
+
+    private String customerIdentification;
 }

@@ -34,7 +34,17 @@ public class AccountPersistenceAdapter implements AccountPort {
 
     @Override
     public void update(BankAccount account) {
-        repository.save(toEntity(account));
+        AccountEntity existingEntity = repository.findByAccountNumber(account.getAccountNumber());
+
+        if (existingEntity == null) {
+            repository.save(toEntity(account));
+            return;
+        }
+
+        AccountEntity entity = toEntity(account);
+        entity.setId(existingEntity.getId());
+
+        repository.save(entity);
     }
 
     private AccountEntity toEntity(BankAccount account) {

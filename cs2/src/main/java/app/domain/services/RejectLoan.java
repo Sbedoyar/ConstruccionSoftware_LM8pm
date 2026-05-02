@@ -20,22 +20,21 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-//@Service
+@Service
 public class RejectLoan {
 
     private final LoanPort loanPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
 
-    //@Autowired
+    @Autowired
     public RejectLoan(LoanPort loanPort, UserPort userPort, OperationLogPort operationLogPort) {
         this.loanPort = loanPort;
         this.userPort = userPort;
         this.operationLogPort = operationLogPort;
     }
 
-    public void rejectLoan(String loanId, String userIdentification) throws BusinessException {
-
+    public void rejectLoan(String loanId, String userIdentification, String rejectionReason) throws BusinessException {
         // Validación general:
         // El ID del préstamo es obligatorio.
         if (loanId == null || loanId.trim().isEmpty()) {
@@ -47,6 +46,9 @@ public class RejectLoan {
         if (userIdentification == null || userIdentification.trim().isEmpty()) {
             throw new BusinessException("La identificación del usuario es obligatoria");
         }
+        if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+            throw new BusinessException("La razón del rechazo es obligatoria");
+}
 
         // Se busca el préstamo a rechazar.
         Loan loan = loanPort.findByLoanId(loanId.trim());
@@ -83,7 +85,7 @@ public class RejectLoan {
 
         // RN-20:
         // Registrar el rechazo del préstamo en la bitácora.
-        registerLoanRejectedLog(user, loan);
+        registerLoanRejectedLog(user, loan, rejectionReason);
     }
 
     private void validateActiveUser(User user) {
@@ -110,7 +112,7 @@ public class RejectLoan {
         }
     }
 
-    private void registerLoanRejectedLog(User user, Loan loan) {
+    private void registerLoanRejectedLog(User user, Loan loan, String rejectionReason) {
 
         // RN-20:
         // Registrar el rechazo del préstamo en la bitácora.
@@ -126,6 +128,7 @@ public class RejectLoan {
         detailData.put("loanId", loan.getLoanId());
         detailData.put("previousStatus", LoanStatus.IN_REVIEW.name());
         detailData.put("newStatus", LoanStatus.REJECTED.name());
+        detailData.put("rejectionReason", rejectionReason.trim());
 
         operationLog.setDetailData(detailData);
 
