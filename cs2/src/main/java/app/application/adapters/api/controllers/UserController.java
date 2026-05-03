@@ -50,7 +50,6 @@ public class UserController {
         return user;
     }
 
-
     private static void assignCustomerToUser(User user, String customerIdentification) {
         if (customerIdentification == null || customerIdentification.trim().isEmpty()) {
             return;
@@ -64,8 +63,8 @@ public class UserController {
         }
 
         if (user.getSystemRole() == RoleType.BUSINESS_CUSTOMER ||
-                user.getSystemRole() == RoleType.COMPANY_OPERATOR ||
-                user.getSystemRole() == RoleType.COMPANY_SUPERVISOR) {
+                user.getSystemRole() == RoleType.COMPANY_SUPERVISOR ||
+                user.getSystemRole() == RoleType.PENDING_COMPANY_OPERATOR) {
 
             BusinessCustomer customer = new BusinessCustomer();
             customer.setIdentificationNumber(customerIdentification.trim());

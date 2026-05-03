@@ -9,4 +9,8 @@ public interface CompanySupervisorUseCase {
 
     void rejectTransfer(Integer transferId,
                         String supervisorIdentification) throws BusinessException;
+
+    void delegateCompanyOperator(String delegatorIdentification,
+                             String targetUserIdentification,
+                             String companyIdentification) throws BusinessException;
 }

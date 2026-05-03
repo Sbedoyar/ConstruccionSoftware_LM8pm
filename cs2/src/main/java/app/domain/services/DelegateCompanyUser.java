@@ -12,13 +12,13 @@ import app.domain.ports.out.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//@Service
+@Service
 public class DelegateCompanyUser {
 
     private final UserPort userPort;
     private final CustomerPort customerPort;
 
-    //@Autowired
+    @Autowired
     public DelegateCompanyUser(UserPort userPort, CustomerPort customerPort) {
         this.userPort = userPort;
         this.customerPort = customerPort;

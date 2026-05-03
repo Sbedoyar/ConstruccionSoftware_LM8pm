@@ -11,13 +11,13 @@ import app.domain.ports.out.UserPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//@Service
+@Service
 public class FindAccountForTeller {
 
     private final AccountPort accountPort;
     private final UserPort userPort;
 
-    //@Autowired
+    @Autowired
     public FindAccountForTeller(AccountPort accountPort, UserPort userPort) {
         this.accountPort = accountPort;
         this.userPort = userPort;

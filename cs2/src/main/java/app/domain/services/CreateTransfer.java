@@ -35,18 +35,20 @@ public class CreateTransfer {
     private final ExecuteTransfer executeTransfer;
     private final OperationLogPort operationLogPort;
     private final AccountPort accountPort;
+    private final ValidateAccountOperation validateAccountOperation;
 
     @Autowired
     public CreateTransfer(TransferPort transferPort,
                           UserPort userPort,
                           ExecuteTransfer executeTransfer,
                           OperationLogPort operationLogPort,
-                          AccountPort accountPort) {
+                          AccountPort accountPort, ValidateAccountOperation validateAccountOperation) {
         this.transferPort = transferPort;
         this.userPort = userPort;
         this.executeTransfer = executeTransfer;
         this.operationLogPort = operationLogPort;
         this.accountPort = accountPort;
+        this.validateAccountOperation = validateAccountOperation;
     }
 
     @Transactional
@@ -89,7 +91,7 @@ public class CreateTransfer {
 
         // RN-05 / RN-16:
         // No se permiten operaciones desde cuentas bloqueadas o canceladas.
-        validateSourceAccountOperable(transfer);
+        validateAccountOperation.validateAccountOperability(transfer.getSourceAccount());
 
         // Validación general:
         // Si la transferencia es interna, la cuenta destino es obligatoria.
@@ -195,16 +197,6 @@ public class CreateTransfer {
         }
 
         transfer.setSourceAccount(sourceAccount);
-    }
-
-    private void validateSourceAccountOperable(Transfer transfer) {
-
-        // RN-05 / RN-16:
-        // No se permiten transferencias desde cuentas bloqueadas o canceladas.
-        if (transfer.getSourceAccount().getAccountStatus() == AccountStatus.BLOCKED ||
-            transfer.getSourceAccount().getAccountStatus() == AccountStatus.CANCELLED) {
-            throw new BusinessException("No se permiten transferencias desde cuentas bloqueadas o canceladas");
-        }
     }
 
     private void validateTargetAccount(Transfer transfer) {

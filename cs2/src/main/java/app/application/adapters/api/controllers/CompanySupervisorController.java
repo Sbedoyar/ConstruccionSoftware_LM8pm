@@ -1,8 +1,10 @@
 package app.application.adapters.api.controllers;
 
 import app.application.adapters.api.request.ApproveTransferRequest;
+import app.application.adapters.api.request.DelegateCompanyOperatorRequest;
 import app.application.adapters.api.request.RejectTransferRequest;
 import app.application.adapters.api.response.ApproveTransferResponse;
+import app.application.adapters.api.response.DelegateCompanyOperatorResponse;
 import app.application.adapters.api.response.RejectTransferResponse;
 import app.application.usecases.CompanySupervisorUseCase;
 import jakarta.validation.Valid;
@@ -55,4 +57,23 @@ public class CompanySupervisorController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+    @PostMapping("/users/delegate-operator")
+        public ResponseEntity<DelegateCompanyOperatorResponse> delegateCompanyOperator(
+                @Valid @RequestBody DelegateCompanyOperatorRequest request) {
+
+        companySupervisorUseCase.delegateCompanyOperator(
+                request.getDelegatorIdentification(),
+                request.getTargetUserIdentification(),
+                request.getCompanyIdentification()
+        );
+
+        DelegateCompanyOperatorResponse response = new DelegateCompanyOperatorResponse(
+                request.getTargetUserIdentification(),
+                request.getCompanyIdentification(),
+                "COMPANY_OPERATOR",
+                "Usuario delegado como operador de empresa correctamente"
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
 }

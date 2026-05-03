@@ -132,24 +132,23 @@ public class CreateUser {
 
         userPort.save(user);
     }
-
     private void validateCustomerRequirement(User user) {
+
+        if (user.getSystemRole() == RoleType.COMPANY_OPERATOR) {
+            throw new BusinessException("El rol COMPANY_OPERATOR no se puede asignar directamente. Primero cree el usuario como PENDING_COMPANY_OPERATOR y luego delegue el permiso.");
+        }
 
         switch (user.getSystemRole()) {
 
-            // Estos roles representan a un cliente o empresa cliente,
-            // por lo tanto deben tener customer asociado.
             case INDIVIDUAL_CUSTOMER:
             case BUSINESS_CUSTOMER:
-            case COMPANY_OPERATOR:
             case COMPANY_SUPERVISOR:
+            case PENDING_COMPANY_OPERATOR:
                 if (user.getCustomer() == null) {
                     throw new BusinessException("Este rol requiere un cliente asociado");
                 }
                 break;
 
-            // Estos roles son internos del banco,
-            // por lo tanto no deben tener customer asociado.
             case TELLER_EMPLOYEE:
             case COMMERCIAL_EMPLOYEE:
             case INTERNAL_ANALYST:
@@ -162,7 +161,6 @@ public class CreateUser {
                 throw new BusinessException("Rol de usuario no válido");
         }
     }
-
     private void validateCustomerTypeByRole(User user) {
 
         if (user.getCustomer() == null) {
@@ -171,30 +169,28 @@ public class CreateUser {
 
         switch (user.getSystemRole()) {
 
-            // El cliente individual debe estar ligado a un IndividualCustomer.
             case INDIVIDUAL_CUSTOMER:
                 if (!(user.getCustomer() instanceof IndividualCustomer)) {
                     throw new BusinessException("El rol INDIVIDUAL_CUSTOMER debe asociarse a un cliente individual");
                 }
 
-                // Regla de consistencia:
-                // Si el usuario representa a un cliente individual,
-                // ambos deben corresponder a la misma identificación.
                 if (user.getCustomer().getIdentificationNumber() == null ||
-                    !user.getIdentificationNumber().trim()
-                        .equals(user.getCustomer().getIdentificationNumber().trim())) {
+                        !user.getIdentificationNumber().trim()
+                                .equals(user.getCustomer().getIdentificationNumber().trim())) {
                     throw new BusinessException("El usuario cliente individual debe tener la misma identificación que su cliente asociado");
                 }
                 break;
 
-            // Los roles empresariales deben estar ligados a una empresa.
             case BUSINESS_CUSTOMER:
-            case COMPANY_OPERATOR:
             case COMPANY_SUPERVISOR:
+            case PENDING_COMPANY_OPERATOR:
                 if (!(user.getCustomer() instanceof BusinessCustomer)) {
                     throw new BusinessException("Este rol debe asociarse a un cliente empresa");
                 }
                 break;
+
+            case COMPANY_OPERATOR:
+                throw new BusinessException("El rol COMPANY_OPERATOR solo puede asignarse mediante delegación");
 
             default:
                 break;

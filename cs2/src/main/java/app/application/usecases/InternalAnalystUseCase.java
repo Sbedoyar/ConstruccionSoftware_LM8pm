@@ -1,7 +1,11 @@
 package app.application.usecases;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.bankingProduct.BankAccount;
+import app.domain.models.bankingProduct.Loan;
 import app.domain.models.operationLog.OperationLog;
+import app.domain.models.person.Customer;
+import app.domain.models.transfer.Transfer;
 import app.domain.services.ApproveLoan;
 import app.domain.services.DisburseLoan;
 import app.domain.services.FindDataForInternalAnalyst;
@@ -62,5 +66,41 @@ public class InternalAnalystUseCase implements app.domain.ports.in.InternalAnaly
     @Override
     public List<OperationLog> findAllLogs(String analystIdentification) throws BusinessException {
         return findDataForInternalAnalyst.findAllLogs(analystIdentification);
+    }
+
+    @Override
+    public Customer findCustomer(String analystIdentification,
+                                String customerIdentification) throws BusinessException {
+        return findDataForInternalAnalyst.findCustomer(
+                analystIdentification,
+                customerIdentification
+        );
+    }
+
+    @Override
+    public BankAccount findAccount(String analystIdentification,
+                                String accountNumber) throws BusinessException {
+        return findDataForInternalAnalyst.findAccount(
+                analystIdentification,
+                accountNumber
+        );
+    }
+    
+    @Override
+    public Loan findLoan(String analystIdentification,
+                        String loanId) throws BusinessException {
+        return findDataForInternalAnalyst.findLoan(
+                analystIdentification,
+                loanId
+        );
+    }
+
+    @Override
+    public Transfer findTransfer(String analystIdentification,
+                                int transferId) throws BusinessException {
+        return findDataForInternalAnalyst.findTransfer(
+                analystIdentification,
+                transferId
+        );
     }
 }
