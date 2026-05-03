@@ -17,9 +17,6 @@ public class AccountRequest {
     @NotBlank(message = "La identificación del cliente es obligatoria")
     private String customerIdentification;
 
-    @NotBlank(message = "La identificación del usuario actor es obligatoria")
-    private String userIdentification;
-
     @NotBlank(message = "El número de cuenta es obligatorio")
     private String accountNumber;
 

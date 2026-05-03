@@ -7,9 +7,11 @@ import app.application.adapters.api.response.ApproveTransferResponse;
 import app.application.adapters.api.response.DelegateCompanyOperatorResponse;
 import app.application.adapters.api.response.RejectTransferResponse;
 import app.application.usecases.CompanySupervisorUseCase;
+import app.domain.models.person.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,11 +26,12 @@ public class CompanySupervisorController {
 
     @PostMapping("/transfers/approve")
     public ResponseEntity<ApproveTransferResponse> approveTransfer(
-            @Valid @RequestBody ApproveTransferRequest request) {
+            @Valid @RequestBody ApproveTransferRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         companySupervisorUseCase.approveTransfer(
                 request.getTransferId(),
-                request.getSupervisorIdentification()
+                authenticatedUser.getIdentificationNumber()
         );
 
         ApproveTransferResponse response = new ApproveTransferResponse(
@@ -42,11 +45,12 @@ public class CompanySupervisorController {
 
     @PostMapping("/transfers/reject")
     public ResponseEntity<RejectTransferResponse> rejectTransfer(
-            @Valid @RequestBody RejectTransferRequest request) {
+            @Valid @RequestBody RejectTransferRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         companySupervisorUseCase.rejectTransfer(
                 request.getTransferId(),
-                request.getSupervisorIdentification()
+                authenticatedUser.getIdentificationNumber()
         );
 
         RejectTransferResponse response = new RejectTransferResponse(
@@ -57,12 +61,14 @@ public class CompanySupervisorController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
     @PostMapping("/users/delegate-operator")
-        public ResponseEntity<DelegateCompanyOperatorResponse> delegateCompanyOperator(
-                @Valid @RequestBody DelegateCompanyOperatorRequest request) {
+    public ResponseEntity<DelegateCompanyOperatorResponse> delegateCompanyOperator(
+            @Valid @RequestBody DelegateCompanyOperatorRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         companySupervisorUseCase.delegateCompanyOperator(
-                request.getDelegatorIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 request.getTargetUserIdentification(),
                 request.getCompanyIdentification()
         );
@@ -75,5 +81,5 @@ public class CompanySupervisorController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
-        }
+    }
 }

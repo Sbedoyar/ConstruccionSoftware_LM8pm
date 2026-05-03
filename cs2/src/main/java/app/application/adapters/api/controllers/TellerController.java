@@ -7,9 +7,11 @@ import app.application.usecases.TellerUseCase;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankProductCatalog;
 import app.domain.models.enums.ProductCategory;
+import app.domain.models.person.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -27,10 +29,10 @@ public class TellerController {
     @GetMapping("/accounts/{accountNumber}")
     public ResponseEntity<AccountDetailResponse> findAccount(
             @PathVariable String accountNumber,
-            @RequestParam String tellerIdentification) {
+            @AuthenticationPrincipal User authenticatedUser) {
 
         BankAccount account = tellerUseCase.findAccount(
-                tellerIdentification,
+                authenticatedUser.getIdentificationNumber(),
                 accountNumber
         );
 
@@ -39,13 +41,14 @@ public class TellerController {
 
     @PostMapping("/accounts")
     public ResponseEntity<AccountResponse> createAccount(
-            @Valid @RequestBody AccountRequest request) {
+            @Valid @RequestBody AccountRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         BankAccount account = toBankAccount(request);
 
         tellerUseCase.createAccount(
                 request.getCustomerIdentification(),
-                request.getUserIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 account
         );
 

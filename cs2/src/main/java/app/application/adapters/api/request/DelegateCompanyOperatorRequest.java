@@ -8,9 +8,6 @@ import lombok.Setter;
 @Setter
 public class DelegateCompanyOperatorRequest {
 
-    @NotBlank(message = "La identificación del delegador es obligatoria")
-    private String delegatorIdentification;
-
     @NotBlank(message = "La identificación del usuario objetivo es obligatoria")
     private String targetUserIdentification;
 

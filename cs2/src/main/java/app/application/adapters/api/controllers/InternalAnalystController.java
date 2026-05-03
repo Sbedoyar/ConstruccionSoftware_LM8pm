@@ -18,10 +18,12 @@ import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
+import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,11 +41,12 @@ public class InternalAnalystController {
 
     @PostMapping("/loans/approve")
     public ResponseEntity<ApproveLoanResponse> approveLoan(
-            @Valid @RequestBody ApproveLoanRequest request) {
+            @Valid @RequestBody ApproveLoanRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         internalAnalystUseCase.approveLoan(
                 request.getLoanId(),
-                request.getAnalystIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 request.getApprovedAmount()
         );
 
@@ -59,11 +62,12 @@ public class InternalAnalystController {
 
     @PostMapping("/loans/reject")
     public ResponseEntity<RejectLoanResponse> rejectLoan(
-            @Valid @RequestBody RejectLoanRequest request) {
+            @Valid @RequestBody RejectLoanRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         internalAnalystUseCase.rejectLoan(
                 request.getLoanId(),
-                request.getAnalystIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 request.getRejectionReason()
         );
 
@@ -79,11 +83,12 @@ public class InternalAnalystController {
 
     @PostMapping("/loans/disburse")
     public ResponseEntity<DisburseLoanResponse> disburseLoan(
-            @Valid @RequestBody DisburseLoanRequest request) {
+            @Valid @RequestBody DisburseLoanRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         internalAnalystUseCase.disburseLoan(
                 request.getLoanId(),
-                request.getAnalystIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 request.getDisbursementAccountNumber()
         );
 
@@ -99,9 +104,11 @@ public class InternalAnalystController {
 
     @GetMapping("/logs")
     public ResponseEntity<List<OperationLogResponse>> findAllLogs(
-            @RequestParam String analystIdentification) {
+            @AuthenticationPrincipal User authenticatedUser) {
 
-        List<OperationLog> logs = internalAnalystUseCase.findAllLogs(analystIdentification);
+        List<OperationLog> logs = internalAnalystUseCase.findAllLogs(
+                authenticatedUser.getIdentificationNumber()
+        );
 
         List<OperationLogResponse> response = logs.stream()
                 .map(InternalAnalystController::toOperationLogResponse)
@@ -113,14 +120,53 @@ public class InternalAnalystController {
     @GetMapping("/customers/{customerIdentification}")
     public ResponseEntity<CustomerDetailResponse> findCustomer(
             @PathVariable String customerIdentification,
-            @RequestParam String analystIdentification) {
+            @AuthenticationPrincipal User authenticatedUser) {
 
         Customer customer = internalAnalystUseCase.findCustomer(
-                analystIdentification,
+                authenticatedUser.getIdentificationNumber(),
                 customerIdentification
         );
 
         return ResponseEntity.ok(toCustomerDetailResponse(customer));
+    }
+
+    @GetMapping("/accounts/{accountNumber}")
+    public ResponseEntity<AccountDetailResponse> findAccount(
+            @PathVariable String accountNumber,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        BankAccount account = internalAnalystUseCase.findAccount(
+                authenticatedUser.getIdentificationNumber(),
+                accountNumber
+        );
+
+        return ResponseEntity.ok(toAccountDetailResponse(account));
+    }
+
+    @GetMapping("/loans/{loanId}")
+    public ResponseEntity<LoanDetailResponse> findLoan(
+            @PathVariable String loanId,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        Loan loan = internalAnalystUseCase.findLoan(
+                authenticatedUser.getIdentificationNumber(),
+                loanId
+        );
+
+        return ResponseEntity.ok(toLoanDetailResponse(loan));
+    }
+
+    @GetMapping("/transfers/{transferId}")
+    public ResponseEntity<TransferDetailResponse> findTransfer(
+            @PathVariable int transferId,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        Transfer transfer = internalAnalystUseCase.findTransfer(
+                authenticatedUser.getIdentificationNumber(),
+                transferId
+        );
+
+        return ResponseEntity.ok(toTransferDetailResponse(transfer));
     }
 
     private static OperationLogResponse toOperationLogResponse(OperationLog log) {
@@ -169,20 +215,8 @@ public class InternalAnalystController {
                 legalRepresentativeIdentification
         );
     }
-    @GetMapping("/accounts/{accountNumber}")
-        public ResponseEntity<AccountDetailResponse> findAccount(
-                @PathVariable String accountNumber,
-                @RequestParam String analystIdentification) {
 
-        BankAccount account = internalAnalystUseCase.findAccount(
-                analystIdentification,
-                accountNumber
-        );
-
-        return ResponseEntity.ok(toAccountDetailResponse(account));
-        }
-
-     private static AccountDetailResponse toAccountDetailResponse(BankAccount account) {
+    private static AccountDetailResponse toAccountDetailResponse(BankAccount account) {
         return new AccountDetailResponse(
                 account.getAccountNumber(),
                 account.getAccountType(),
@@ -195,56 +229,31 @@ public class InternalAnalystController {
                 account.getCatalog() != null ? account.getCatalog().getProductName() : null,
                 account.getCatalog() != null ? account.getCatalog().getDescription() : null
         );
-        }
-
-        @GetMapping("/loans/{loanId}")
-        public ResponseEntity<LoanDetailResponse> findLoan(
-                @PathVariable String loanId,
-                @RequestParam String analystIdentification) {
-
-        Loan loan = internalAnalystUseCase.findLoan(
-                analystIdentification,
-                loanId
-        );
-
-        return ResponseEntity.ok(toLoanDetailResponse(loan));
-        }
+    }
 
     private static LoanDetailResponse toLoanDetailResponse(Loan loan) {
         return new LoanDetailResponse(
-            loan.getLoanId(),
-            loan.getLoanType(),
-            loan.getRequestedAmount(),
-            loan.getApprovedAmount(),
-            loan.getInterestRate(),
-            loan.getTermMonths(),
-            loan.getLoanStatus(),
-            loan.getCreationDate(),
-            loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
-            loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
-            loan.getReviewedBy() != null ? loan.getReviewedBy().getIdentificationNumber() : null,
-            loan.getReviewDate(),
-            loan.getDisbursementDate(),
-            loan.getDisbursementAccount() != null ? loan.getDisbursementAccount().getAccountNumber() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getProductName() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getDescription() : null
-         );
-    }
-    @GetMapping("/transfers/{transferId}")
-        public ResponseEntity<TransferDetailResponse> findTransfer(
-                @PathVariable int transferId,
-                @RequestParam String analystIdentification) {
-
-        Transfer transfer = internalAnalystUseCase.findTransfer(
-                analystIdentification,
-                transferId
+                loan.getLoanId(),
+                loan.getLoanType(),
+                loan.getRequestedAmount(),
+                loan.getApprovedAmount(),
+                loan.getInterestRate(),
+                loan.getTermMonths(),
+                loan.getLoanStatus(),
+                loan.getCreationDate(),
+                loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
+                loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
+                loan.getReviewedBy() != null ? loan.getReviewedBy().getIdentificationNumber() : null,
+                loan.getReviewDate(),
+                loan.getDisbursementDate(),
+                loan.getDisbursementAccount() != null ? loan.getDisbursementAccount().getAccountNumber() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getDescription() : null
         );
+    }
 
-        return ResponseEntity.ok(toTransferDetailResponse(transfer));
-        }
-
-        private static TransferDetailResponse toTransferDetailResponse(Transfer transfer) {
+    private static TransferDetailResponse toTransferDetailResponse(Transfer transfer) {
         return new TransferDetailResponse(
                 transfer.getTransferId(),
                 transfer.getSourceAccount() != null ? transfer.getSourceAccount().getAccountNumber() : null,
@@ -258,6 +267,5 @@ public class InternalAnalystController {
                 transfer.getReviewDate(),
                 transfer.getTransferType()
         );
-        }
-    
+    }
 }

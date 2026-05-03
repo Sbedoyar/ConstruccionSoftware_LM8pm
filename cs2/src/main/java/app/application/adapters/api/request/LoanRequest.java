@@ -17,9 +17,6 @@ public class LoanRequest {
     @NotBlank(message = "La identificación del cliente es obligatoria")
     private String customerIdentification;
 
-    @NotBlank(message = "La identificación del usuario creador es obligatoria")
-    private String userIdentification;
-
     @NotBlank(message = "El ID del préstamo es obligatorio")
     private String loanId;
 

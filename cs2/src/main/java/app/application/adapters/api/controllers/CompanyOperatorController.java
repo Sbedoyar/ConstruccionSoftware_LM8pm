@@ -4,11 +4,13 @@ import app.application.adapters.api.request.TransferRequest;
 import app.application.adapters.api.response.TransferResponse;
 import app.application.usecases.CompanyOperatorUseCase;
 import app.domain.models.bankingProduct.BankAccount;
+import app.domain.models.person.User;
 import app.domain.models.transfer.Transfer;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/company-operator")
@@ -22,12 +24,13 @@ public class CompanyOperatorController {
 
     @PostMapping("/transfers")
     public ResponseEntity<TransferResponse> createTransfer(
-            @Valid @RequestBody TransferRequest request) {
+            @Valid @RequestBody TransferRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         Transfer transfer = toTransfer(request);
 
         companyOperatorUseCase.createTransfer(
-                request.getUserIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 transfer
         );
 

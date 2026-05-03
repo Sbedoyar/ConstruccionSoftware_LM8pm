@@ -5,6 +5,8 @@ import app.application.usecases.CustomerUseCase;
 import app.domain.models.operationLog.OperationLog;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import app.domain.models.person.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
@@ -21,10 +23,10 @@ public class CustomerController {
     @GetMapping("/history/{affectedProductId}")
     public ResponseEntity<List<OperationLogResponse>> findHistoryByProduct(
             @PathVariable String affectedProductId,
-            @RequestParam String userIdentification) {
+            @AuthenticationPrincipal User authenticatedUser) {
 
         List<OperationLog> logs = customerUseCase.findHistoryByProduct(
-                userIdentification,
+                authenticatedUser.getIdentificationNumber(),
                 affectedProductId
         );
 

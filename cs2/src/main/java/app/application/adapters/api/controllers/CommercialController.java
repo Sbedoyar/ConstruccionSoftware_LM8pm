@@ -17,15 +17,16 @@ import app.domain.models.enums.ProductCategory;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
+import app.domain.models.person.User;
 import jakarta.validation.Valid;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/commercial")
@@ -69,13 +70,14 @@ public class CommercialController {
 
     @PostMapping("/accounts")
     public ResponseEntity<AccountResponse> createAccount(
-            @Valid @RequestBody AccountRequest request) {
+            @Valid @RequestBody AccountRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         BankAccount account = toBankAccount(request);
 
         commercialUseCase.createAccount(
                 request.getCustomerIdentification(),
-                request.getUserIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 account
         );
 
@@ -86,13 +88,14 @@ public class CommercialController {
 
     @PostMapping("/loans")
     public ResponseEntity<LoanResponse> createLoan(
-            @Valid @RequestBody LoanRequest request) {
+            @Valid @RequestBody LoanRequest request,
+            @AuthenticationPrincipal User authenticatedUser) {
 
         Loan loan = toLoan(request);
 
         commercialUseCase.createLoan(
                 request.getCustomerIdentification(),
-                request.getUserIdentification(),
+                authenticatedUser.getIdentificationNumber(),
                 loan
         );
 
@@ -104,10 +107,10 @@ public class CommercialController {
     @GetMapping("/customers/assigned/{customerIdentification}")
     public ResponseEntity<AssignedCustomerResponse> findAssignedCustomer(
             @PathVariable String customerIdentification,
-            @RequestParam String userIdentification) {
+            @AuthenticationPrincipal User authenticatedUser) {
 
         Customer customer = commercialUseCase.findAssignedCustomer(
-                userIdentification,
+                authenticatedUser.getIdentificationNumber(),
                 customerIdentification
         );
 
@@ -140,6 +143,7 @@ public class CommercialController {
         customer.setLegalRepresentative(legalRepresentative);
         return customer;
     }
+
     private static BankAccount toBankAccount(AccountRequest request) {
         BankAccount account = new BankAccount();
 
@@ -225,7 +229,6 @@ public class CommercialController {
                 legalRepresentativeIdentification
         );
     }
-
 
     private static CustomerResponse toCustomerResponse(IndividualCustomer customer) {
         return new CustomerResponse(

@@ -13,9 +13,6 @@ import java.math.BigDecimal;
 @Setter
 public class TransferRequest {
 
-    @NotBlank(message = "La identificación del usuario creador es obligatoria")
-    private String userIdentification;
-
     @NotBlank(message = "La cuenta origen es obligatoria")
     private String sourceAccountNumber;
 
