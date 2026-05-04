@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
 
                         // Temporalmente dejamos users abierto para seguir creando usuarios de prueba
-                        .requestMatchers("/users/**").permitAll()
+                        .requestMatchers("/users/**").hasRole("COMMERCIAL_EMPLOYEE")
 
                         // Comercial
                         .requestMatchers("/commercial/**").hasRole("COMMERCIAL_EMPLOYEE")
@@ -49,7 +49,10 @@ public class SecurityConfig {
                         .requestMatchers("/company-operator/**").hasRole("COMPANY_OPERATOR")
 
                         // Supervisor de empresa
-                        .requestMatchers("/company-supervisor/**").hasRole("COMPANY_SUPERVISOR")
+                        .requestMatchers("/company-supervisor/**").hasAnyRole(
+                                "COMPANY_SUPERVISOR",
+                                "BUSINESS_CUSTOMER"
+                        )
 
                         // Clientes
                         .requestMatchers("/customers/**").hasAnyRole(

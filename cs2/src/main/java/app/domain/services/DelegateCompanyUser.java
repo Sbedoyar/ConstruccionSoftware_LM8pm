@@ -143,37 +143,16 @@ public class DelegateCompanyUser {
 
     private void validateDelegableTargetUser(User targetUser, BusinessCustomer company) {
 
-        // Validación adicional:
-        // No se puede delegar a usuarios internos del banco.
-        if (targetUser.getSystemRole() == RoleType.INTERNAL_ANALYST ||
-            targetUser.getSystemRole() == RoleType.TELLER_EMPLOYEE ||
-            targetUser.getSystemRole() == RoleType.COMMERCIAL_EMPLOYEE) {
-            throw new BusinessException("No se puede delegar como operador a un usuario del banco");
+        if (targetUser.getSystemRole() != RoleType.PENDING_COMPANY_OPERATOR) {
+            throw new BusinessException("Solo un usuario pendiente de empresa puede ser delegado como operador");
         }
 
-        // Validación adicional:
-        // Un cliente individual no puede convertirse en operador de empresa.
-        if (targetUser.getSystemRole() == RoleType.INDIVIDUAL_CUSTOMER) {
-            throw new BusinessException("Un cliente individual no puede ser delegado como operador de empresa");
+        if (targetUser.getCustomer() == null) {
+            throw new BusinessException("El usuario pendiente debe estar asociado a una empresa");
         }
 
-        // Validación adicional:
-        // Un supervisor de empresa no debe degradarse a operador.
-        if (targetUser.getSystemRole() == RoleType.COMPANY_SUPERVISOR) {
-            throw new BusinessException("No se puede delegar como operador a un supervisor de empresa");
-        }
-
-        // Validación adicional:
-        // Un administrador de empresa no debe degradarse a operador.
-        if (targetUser.getSystemRole() == RoleType.BUSINESS_CUSTOMER) {
-            throw new BusinessException("No se puede delegar como operador a un administrador de empresa");
-        }
-
-        // Validación adicional:
-        // Si el usuario ya está asociado a otra empresa, no puede reasignarse aquí.
-        if (targetUser.getCustomer() != null
-                && !targetUser.getCustomer().getIdentificationNumber().equals(company.getIdentificationNumber())) {
-            throw new BusinessException("El usuario ya está asociado a otra empresa");
+        if (!targetUser.getCustomer().getIdentificationNumber().equals(company.getIdentificationNumber())) {
+            throw new BusinessException("El usuario pendiente pertenece a otra empresa");
         }
     }
 }
