@@ -1,5 +1,6 @@
 package app.domain.ports.out;
 
+import app.domain.models.enums.TransferStatus;
 import app.domain.models.transfer.Transfer;
 
 import java.time.LocalDateTime;
@@ -9,9 +10,13 @@ public interface TransferPort {
 
     Transfer findByTransferId(int transferId);
 
-    List<Transfer> findExpiredPendingTransfers(LocalDateTime now);
-
     void save(Transfer transfer);
 
     void update(Transfer transfer);
+
+    List<Transfer> findExpiredPendingTransfers(LocalDateTime now);
+
+    List<Transfer> findByStatus(TransferStatus status);
+
+    List<Transfer> findByCreatedByIdentification(String createdByIdentification);
 }

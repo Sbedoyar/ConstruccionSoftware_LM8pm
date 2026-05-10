@@ -147,4 +147,20 @@ public class TransferPersistenceAdapter implements TransferPort {
         return transfer;
     }
 
+    @Override
+    public List<Transfer> findByStatus(TransferStatus status) {
+        return repository.findByStatus(status.name())
+                .stream()
+                .map(this::toModel)
+                .toList();
+    }
+
+    @Override
+    public List<Transfer> findByCreatedByIdentification(String createdByIdentification) {
+        return repository.findByCreatedByIdentification(createdByIdentification)
+                .stream()
+                .map(this::toModel)
+                .toList();
+    }
+
 }

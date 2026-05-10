@@ -1,9 +1,14 @@
 package app.application.usecases;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.transfer.Transfer;
 import app.domain.services.ApproveTransfer;
 import app.domain.services.DelegateCompanyUser;
+import app.domain.services.FindPendingTransfersForSupervisor;
 import app.domain.services.RejectTransfer;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +24,17 @@ public class CompanySupervisorUseCase implements app.domain.ports.in.CompanySupe
     @Autowired
     private DelegateCompanyUser delegateCompanyUser;
 
+    @Autowired
+    private final FindPendingTransfersForSupervisor findPendingTransfersForSupervisor;
+
     public CompanySupervisorUseCase(ApproveTransfer approveTransfer,
                                     RejectTransfer rejectTransfer,
-                                    DelegateCompanyUser delegateCompanyUser) {
+                                    DelegateCompanyUser delegateCompanyUser,
+                                    FindPendingTransfersForSupervisor findPendingTransfersForSupervisor) {
         this.approveTransfer = approveTransfer;
         this.rejectTransfer = rejectTransfer;
         this.delegateCompanyUser = delegateCompanyUser;
+        this.findPendingTransfersForSupervisor = findPendingTransfersForSupervisor;
     }
 
     @Override
@@ -48,5 +58,10 @@ public class CompanySupervisorUseCase implements app.domain.ports.in.CompanySupe
                 targetUserIdentification,
                 companyIdentification
         );
+    }
+
+    @Override
+    public List<Transfer> findPendingTransfers(String supervisorIdentification) throws BusinessException {
+        return findPendingTransfersForSupervisor.findPendingTransfers(supervisorIdentification);
     }
 }

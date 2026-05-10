@@ -8,7 +8,11 @@ import java.util.List;
 
 public interface TransferRepository extends JpaRepository<TransferEntity, Integer> {
 
-    TransferEntity findByTransferId(int transferId);
+    TransferEntity findByTransferId(Integer transferId);
 
-    List<TransferEntity> findByStatusAndExpirationDateBefore(String status, LocalDateTime now);
+    List<TransferEntity> findByStatusAndExpirationDateBefore(String status, LocalDateTime expirationDate);
+
+    List<TransferEntity> findByStatus(String status);
+
+    List<TransferEntity> findByCreatedByIdentification(String createdByIdentification);
 }

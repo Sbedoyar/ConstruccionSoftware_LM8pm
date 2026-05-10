@@ -6,9 +6,14 @@ import app.application.adapters.api.request.RejectTransferRequest;
 import app.application.adapters.api.response.ApproveTransferResponse;
 import app.application.adapters.api.response.DelegateCompanyOperatorResponse;
 import app.application.adapters.api.response.RejectTransferResponse;
+import app.application.adapters.api.response.TransferDetailResponse;
 import app.application.usecases.CompanySupervisorUseCase;
 import app.domain.models.person.User;
+import app.domain.models.transfer.Transfer;
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -82,4 +87,34 @@ public class CompanySupervisorController {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @GetMapping("/transfers/pending")
+        public ResponseEntity<List<TransferDetailResponse>> findPendingTransfers(
+                @AuthenticationPrincipal User authenticatedUser) {
+
+        List<Transfer> transfers = companySupervisorUseCase.findPendingTransfers(
+                authenticatedUser.getIdentificationNumber()
+        );
+
+        return ResponseEntity.ok(
+                transfers.stream()
+                        .map(CompanySupervisorController::toTransferDetailResponse)
+                        .toList()
+        );
+        }
+        private static TransferDetailResponse toTransferDetailResponse(Transfer transfer) {
+                return new TransferDetailResponse(
+                        transfer.getTransferId(),
+                        transfer.getSourceAccount() != null ? transfer.getSourceAccount().getAccountNumber() : null,
+                        transfer.getTargetAccount() != null ? transfer.getTargetAccount().getAccountNumber() : null,
+                        transfer.getAmount(),
+                        transfer.getExpirationDate(),
+                        transfer.getStatus(),
+                        transfer.getCreatedBy() != null ? transfer.getCreatedBy().getIdentificationNumber() : null,
+                        transfer.getCreationDate(),
+                        transfer.getReviewedBy() != null ? transfer.getReviewedBy().getIdentificationNumber() : null,
+                        transfer.getReviewDate(),
+                        transfer.getTransferType()
+                );
+                }
 }

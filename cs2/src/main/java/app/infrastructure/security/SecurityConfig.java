@@ -55,6 +55,8 @@ public class SecurityConfig {
                         )
 
                         // Clientes
+                        .requestMatchers(HttpMethod.POST, "/customers/transfers").hasRole("INDIVIDUAL_CUSTOMER")
+
                         .requestMatchers("/customers/**").hasAnyRole(
                                 "INDIVIDUAL_CUSTOMER",
                                 "BUSINESS_CUSTOMER"

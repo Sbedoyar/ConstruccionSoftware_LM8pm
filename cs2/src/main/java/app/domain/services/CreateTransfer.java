@@ -2,7 +2,6 @@ package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.BankAccount;
-import app.domain.models.enums.AccountStatus;
 import app.domain.models.enums.OperationType;
 import app.domain.models.enums.RoleType;
 import app.domain.models.enums.TransferStatus;
