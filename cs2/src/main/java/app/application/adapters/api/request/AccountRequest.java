@@ -31,11 +31,4 @@ public class AccountRequest {
 
     @NotBlank(message = "El código del producto es obligatorio")
     private String productCode;
-
-    @NotBlank(message = "El nombre del producto es obligatorio")
-    private String productName;
-
-    private String productDescription;
-
-    private Boolean requiresApproval;
 }

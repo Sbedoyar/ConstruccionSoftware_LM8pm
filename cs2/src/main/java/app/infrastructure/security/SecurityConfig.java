@@ -33,8 +33,10 @@ public class SecurityConfig {
                         // Login público
                         .requestMatchers("/auth/**").permitAll()
 
-                        // Temporalmente dejamos users abierto para seguir creando usuarios de prueba
+                        // Solo el empleado comercial puede crear usuarios
                         .requestMatchers("/users/**").hasRole("COMMERCIAL_EMPLOYEE")
+
+                        .requestMatchers("/product-catalog/**").hasRole("COMMERCIAL_EMPLOYEE")
 
                         // Comercial
                         .requestMatchers("/commercial/**").hasRole("COMMERCIAL_EMPLOYEE")
@@ -49,10 +51,12 @@ public class SecurityConfig {
                         .requestMatchers("/company-operator/**").hasRole("COMPANY_OPERATOR")
 
                         // Supervisor de empresa
-                        .requestMatchers("/company-supervisor/**").hasAnyRole(
+                        .requestMatchers(HttpMethod.POST, "/company-supervisor/users/delegate-operator").hasAnyRole(
                                 "COMPANY_SUPERVISOR",
                                 "BUSINESS_CUSTOMER"
                         )
+
+                        .requestMatchers("/company-supervisor/**").hasRole("COMPANY_SUPERVISOR")
 
                         // Clientes
                         .requestMatchers(HttpMethod.POST, "/customers/transfers").hasRole("INDIVIDUAL_CUSTOMER")

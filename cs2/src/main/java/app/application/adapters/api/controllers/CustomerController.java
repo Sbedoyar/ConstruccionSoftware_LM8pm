@@ -171,8 +171,8 @@ public class CustomerController {
                 .status(HttpStatus.CREATED)
                 .body(toLoanResponse(loan));
     }
-
-    private static Loan toLoan(CustomerLoanRequest request) {
+    
+        private static Loan toLoan(CustomerLoanRequest request) {
         Loan loan = new Loan();
 
         loan.setLoanId(request.getLoanId());
@@ -183,18 +183,11 @@ public class CustomerController {
 
         BankProductCatalog catalog = new BankProductCatalog();
         catalog.setProductCode(request.getProductCode());
-        catalog.setProductName(request.getProductName());
-        catalog.setDescription(request.getProductDescription());
-        catalog.setCategory(ProductCategory.LOAN);
-        catalog.setRequiresApproval(
-                request.getRequiresApproval() != null && request.getRequiresApproval()
-        );
-        catalog.setActive(true);
 
         loan.setCatalog(catalog);
 
         return loan;
-    }
+        }
 
     private static LoanResponse toLoanResponse(Loan loan) {
         return new LoanResponse(

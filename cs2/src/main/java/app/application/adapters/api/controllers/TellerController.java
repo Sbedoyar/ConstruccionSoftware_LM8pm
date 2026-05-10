@@ -72,13 +72,6 @@ public class TellerController {
 
         BankProductCatalog catalog = new BankProductCatalog();
         catalog.setProductCode(request.getProductCode());
-        catalog.setProductName(request.getProductName());
-        catalog.setDescription(request.getProductDescription());
-        catalog.setCategory(ProductCategory.ACCOUNT);
-        catalog.setRequiresApproval(
-                request.getRequiresApproval() != null && request.getRequiresApproval()
-        );
-        catalog.setActive(true);
 
         account.setCatalog(catalog);
 

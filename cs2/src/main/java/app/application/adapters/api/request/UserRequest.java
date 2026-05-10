@@ -37,6 +37,7 @@ public class UserRequest {
     @NotNull(message = "El rol del sistema es obligatorio")
     private RoleType systemRole;
 
+    @NotNull(message = "El estado del usuario es obligatorio")
     private UserStatus userStatus;
 
     private String customerIdentification;

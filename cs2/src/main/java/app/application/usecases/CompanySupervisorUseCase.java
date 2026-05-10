@@ -8,23 +8,14 @@ import app.domain.services.FindPendingTransfersForSupervisor;
 import app.domain.services.RejectTransfer;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CompanySupervisorUseCase implements app.domain.ports.in.CompanySupervisorUseCase {
 
-    @Autowired
     private ApproveTransfer approveTransfer;
-
-    @Autowired
     private RejectTransfer rejectTransfer;
-
-    @Autowired
     private DelegateCompanyUser delegateCompanyUser;
-
-    @Autowired
     private final FindPendingTransfersForSupervisor findPendingTransfersForSupervisor;
 
     public CompanySupervisorUseCase(ApproveTransfer approveTransfer,

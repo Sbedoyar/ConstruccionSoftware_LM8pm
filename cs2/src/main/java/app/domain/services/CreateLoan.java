@@ -1,6 +1,7 @@
 package app.domain.services;
 
 import app.domain.exceptions.BusinessException;
+import app.domain.models.bankingProduct.BankProductCatalog;
 import app.domain.models.bankingProduct.Loan;
 import app.domain.models.enums.CustomerStatus;
 import app.domain.models.enums.LoanStatus;
@@ -11,6 +12,7 @@ import app.domain.models.enums.UserStatus;
 import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
+import app.domain.ports.out.BankProductCatalogPort;
 import app.domain.ports.out.CustomerPort;
 import app.domain.ports.out.LoanPort;
 import app.domain.ports.out.OperationLogPort;
@@ -32,16 +34,19 @@ public class CreateLoan {
     private final CustomerPort customerPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
+    private final BankProductCatalogPort bankProductCatalogPort;
 
     @Autowired
     public CreateLoan(LoanPort loanPort,
                       CustomerPort customerPort,
                       UserPort userPort,
-                      OperationLogPort operationLogPort) {
+                      OperationLogPort operationLogPort,
+                      BankProductCatalogPort bankProductCatalogPort) {
         this.loanPort = loanPort;
         this.customerPort = customerPort;
         this.userPort = userPort;
         this.operationLogPort = operationLogPort;
+        this.bankProductCatalogPort = bankProductCatalogPort;
     }
 
     public void createLoan(String customerIdentification, String userIdentification, Loan loan) throws BusinessException {
@@ -122,6 +127,9 @@ public class CreateLoan {
         // Regla general del préstamo:
         // El plazo en meses debe ser mayor que cero.
         validateTermMonths(loan.getTermMonths());
+
+        BankProductCatalog catalog = findValidCatalog(loan.getCatalog(), ProductCategory.LOAN);
+        loan.setCatalog(catalog);
 
         // Regla general del préstamo:
         // El préstamo debe estar asociado a un producto válido del catálogo.
@@ -288,6 +296,34 @@ public class CreateLoan {
         if (!loan.getCatalog().isActive()) {
             throw new BusinessException("El producto del catálogo no se encuentra activo");
         }
+
+    }
+
+    private BankProductCatalog findValidCatalog(BankProductCatalog requestCatalog,
+                                            ProductCategory expectedCategory) {
+
+        if (requestCatalog == null ||
+                requestCatalog.getProductCode() == null ||
+                requestCatalog.getProductCode().trim().isEmpty()) {
+            throw new BusinessException("El código del producto es obligatorio");
+        }
+
+        BankProductCatalog catalog =
+                bankProductCatalogPort.findByProductCode(requestCatalog.getProductCode().trim());
+
+        if (catalog == null) {
+            throw new BusinessException("No existe un producto en el catálogo con ese código");
+        }
+
+        if (catalog.getCategory() != expectedCategory) {
+            throw new BusinessException("El producto del catálogo no corresponde a la categoría esperada");
+        }
+
+        if (!catalog.isActive()) {
+            throw new BusinessException("El producto del catálogo no se encuentra activo");
+        }
+
+        return catalog;
     }
 
     private void registerLoanCreatedLog(User user, Loan loan) {

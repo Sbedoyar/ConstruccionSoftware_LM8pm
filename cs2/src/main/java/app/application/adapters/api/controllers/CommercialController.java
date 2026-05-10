@@ -159,13 +159,6 @@ public class CommercialController {
 
         BankProductCatalog catalog = new BankProductCatalog();
         catalog.setProductCode(request.getProductCode());
-        catalog.setProductName(request.getProductName());
-        catalog.setDescription(request.getProductDescription());
-        catalog.setCategory(ProductCategory.ACCOUNT);
-        catalog.setRequiresApproval(
-                request.getRequiresApproval() != null && request.getRequiresApproval()
-        );
-        catalog.setActive(true);
 
         account.setCatalog(catalog);
 
@@ -183,19 +176,11 @@ public class CommercialController {
 
         BankProductCatalog catalog = new BankProductCatalog();
         catalog.setProductCode(request.getProductCode());
-        catalog.setProductName(request.getProductName());
-        catalog.setDescription(request.getProductDescription());
-        catalog.setCategory(ProductCategory.LOAN);
-        catalog.setRequiresApproval(
-                request.getRequiresApproval() != null && request.getRequiresApproval()
-        );
-        catalog.setActive(true);
 
         loan.setCatalog(catalog);
 
         return loan;
     }
-
     private static AssignedCustomerResponse toAssignedCustomerResponse(Customer customer) {
         String customerType = "INDIVIDUAL";
         LocalDate dateOfBirth = null;

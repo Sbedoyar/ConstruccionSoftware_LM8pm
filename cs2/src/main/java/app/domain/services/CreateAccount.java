@@ -13,6 +13,7 @@ import app.domain.models.operationLog.OperationLog;
 import app.domain.models.person.Customer;
 import app.domain.models.person.User;
 import app.domain.ports.out.AccountPort;
+import app.domain.ports.out.BankProductCatalogPort;
 import app.domain.ports.out.CustomerPort;
 import app.domain.ports.out.OperationLogPort;
 import app.domain.ports.out.UserPort;
@@ -32,16 +33,19 @@ public class CreateAccount {
     private final CustomerPort customerPort;
     private final UserPort userPort;
     private final OperationLogPort operationLogPort;
+    private final BankProductCatalogPort bankProductCatalogPort;
 
     @Autowired
     public CreateAccount(AccountPort accountPort,
                          CustomerPort customerPort,
                          UserPort userPort,
-                         OperationLogPort operationLogPort) {
+                         OperationLogPort operationLogPort,
+                         BankProductCatalogPort bankProductCatalogPort) {
         this.accountPort = accountPort;
         this.customerPort = customerPort;
         this.userPort = userPort;
         this.operationLogPort = operationLogPort;
+        this.bankProductCatalogPort = bankProductCatalogPort;
     }
 
     public void createAccount(String customerIdentification, String userIdentification, BankAccount account) throws BusinessException {
@@ -105,6 +109,9 @@ public class CreateAccount {
         // Validación general:
         // La moneda es obligatoria.
         validateCurrency(account);
+
+        BankProductCatalog catalog = findValidCatalog(account.getCatalog(), ProductCategory.ACCOUNT);
+        account.setCatalog(catalog);
 
         // RN-04:
         // El tipo de cuenta debe ser un valor válido del Producto Bancario General (catálogo).
@@ -252,6 +259,33 @@ public class CreateAccount {
         if (account.getBalance() != null && account.getBalance().signum() < 0) {
             throw new BusinessException("El saldo inicial de la cuenta no puede ser negativo");
         }
+    }
+
+    private BankProductCatalog findValidCatalog(BankProductCatalog requestCatalog,
+                                            ProductCategory expectedCategory) {
+
+        if (requestCatalog == null ||
+                requestCatalog.getProductCode() == null ||
+                requestCatalog.getProductCode().trim().isEmpty()) {
+            throw new BusinessException("El código del producto es obligatorio");
+        }
+
+        BankProductCatalog catalog =
+                bankProductCatalogPort.findByProductCode(requestCatalog.getProductCode().trim());
+
+        if (catalog == null) {
+            throw new BusinessException("No existe un producto en el catálogo con ese código");
+        }
+
+        if (catalog.getCategory() != expectedCategory) {
+            throw new BusinessException("El producto del catálogo no corresponde a la categoría esperada");
+        }
+
+        if (!catalog.isActive()) {
+            throw new BusinessException("El producto del catálogo no se encuentra activo");
+        }
+
+        return catalog;
     }
 
     private void registerAccountCreatedLog(User user, BankAccount account) {
