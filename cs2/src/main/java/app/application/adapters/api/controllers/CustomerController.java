@@ -12,7 +12,6 @@ import app.domain.exceptions.BusinessException;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankProductCatalog;
 import app.domain.models.bankingProduct.Loan;
-import app.domain.models.enums.ProductCategory;
 import app.domain.models.operationLog.OperationLog;
 
 import org.springframework.http.HttpStatus;

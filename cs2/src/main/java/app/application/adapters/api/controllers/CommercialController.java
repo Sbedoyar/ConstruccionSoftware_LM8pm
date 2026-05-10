@@ -13,7 +13,6 @@ import app.application.usecases.CommercialUseCase;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankProductCatalog;
 import app.domain.models.bankingProduct.Loan;
-import app.domain.models.enums.ProductCategory;
 import app.domain.models.person.BusinessCustomer;
 import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;

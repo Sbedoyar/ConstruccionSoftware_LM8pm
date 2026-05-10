@@ -6,7 +6,6 @@ import app.application.adapters.api.response.AccountResponse;
 import app.application.usecases.TellerUseCase;
 import app.domain.models.bankingProduct.BankAccount;
 import app.domain.models.bankingProduct.BankProductCatalog;
-import app.domain.models.enums.ProductCategory;
 import app.domain.models.person.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
