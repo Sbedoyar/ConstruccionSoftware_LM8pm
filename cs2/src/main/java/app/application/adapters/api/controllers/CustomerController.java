@@ -43,14 +43,12 @@ public class CustomerController {
 
         List<OperationLog> logs = customerUseCase.findHistoryByProduct(
                 authenticatedUser.getIdentificationNumber(),
-                affectedProductId
-        );
+                affectedProductId);
 
         return ResponseEntity.ok(
                 logs.stream()
                         .map(CustomerController::toOperationLogResponse)
-                        .toList()
-        );
+                        .toList());
     }
 
     private static OperationLogResponse toOperationLogResponse(OperationLog log) {
@@ -61,8 +59,7 @@ public class CustomerController {
                 log.getUser() != null ? log.getUser().getIdentificationNumber() : null,
                 log.getUserRole(),
                 log.getAffectedProductId(),
-                log.getDetailData()
-        );
+                log.getDetailData());
     }
 
     @PostMapping("/transfers")
@@ -74,8 +71,7 @@ public class CustomerController {
 
         customerUseCase.createTransfer(
                 authenticatedUser.getIdentificationNumber(),
-                transfer
-        );
+                transfer);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -116,8 +112,7 @@ public class CustomerController {
                 transfer.getTransferType(),
                 transfer.getStatus(),
                 transfer.getCreationDate(),
-                "Transferencia creada correctamente"
-        );
+                "Transferencia creada correctamente");
     }
 
     @GetMapping("/accounts/{accountNumber}")
@@ -127,8 +122,7 @@ public class CustomerController {
 
         BankAccount account = customerUseCase.findAccount(
                 authenticatedUser.getIdentificationNumber(),
-                accountNumber
-        );
+                accountNumber);
 
         return ResponseEntity.ok(toAccountDetailResponse(account));
     }
@@ -144,8 +138,7 @@ public class CustomerController {
                 account.getOwner() != null ? account.getOwner().getIdentificationNumber() : null,
                 account.getCatalog() != null ? account.getCatalog().getProductCode() : null,
                 account.getCatalog() != null ? account.getCatalog().getProductName() : null,
-                account.getCatalog() != null ? account.getCatalog().getDescription() : null
-        );
+                account.getCatalog() != null ? account.getCatalog().getDescription() : null);
     }
 
     @PostMapping("/loans")
@@ -163,15 +156,14 @@ public class CustomerController {
         customerUseCase.createLoan(
                 authenticatedUser.getCustomer().getIdentificationNumber(),
                 authenticatedUser.getIdentificationNumber(),
-                loan
-        );
+                loan);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(toLoanResponse(loan));
     }
-    
-        private static Loan toLoan(CustomerLoanRequest request) {
+
+    private static Loan toLoan(CustomerLoanRequest request) {
         Loan loan = new Loan();
 
         loan.setLoanId(request.getLoanId());
@@ -186,7 +178,7 @@ public class CustomerController {
         loan.setCatalog(catalog);
 
         return loan;
-        }
+    }
 
     private static LoanResponse toLoanResponse(Loan loan) {
         return new LoanResponse(
@@ -201,10 +193,9 @@ public class CustomerController {
                 loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
                 loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
                 loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
-                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null
-        );
+                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null);
     }
-    
+
     @GetMapping("/loans/{loanId}")
     public ResponseEntity<LoanDetailResponse> findLoan(
             @PathVariable String loanId,
@@ -212,31 +203,29 @@ public class CustomerController {
 
         Loan loan = customerUseCase.findLoan(
                 authenticatedUser.getIdentificationNumber(),
-                loanId
-        );
+                loanId);
 
         return ResponseEntity.ok(toLoanDetailResponse(loan));
     }
 
     private static LoanDetailResponse toLoanDetailResponse(Loan loan) {
-    return new LoanDetailResponse(
-            loan.getLoanId(),
-            loan.getLoanType(),
-            loan.getRequestedAmount(),
-            loan.getApprovedAmount(),
-            loan.getInterestRate(),
-            loan.getTermMonths(),
-            loan.getLoanStatus(),
-            loan.getCreationDate(),
-            loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
-            loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
-            loan.getReviewedBy() != null ? loan.getReviewedBy().getIdentificationNumber() : null,
-            loan.getReviewDate(),
-            loan.getDisbursementDate(),
-            loan.getDisbursementAccount() != null ? loan.getDisbursementAccount().getAccountNumber() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getProductName() : null,
-            loan.getCatalog() != null ? loan.getCatalog().getDescription() : null
-    );
-}
+        return new LoanDetailResponse(
+                loan.getLoanId(),
+                loan.getLoanType(),
+                loan.getRequestedAmount(),
+                loan.getApprovedAmount(),
+                loan.getInterestRate(),
+                loan.getTermMonths(),
+                loan.getLoanStatus(),
+                loan.getCreationDate(),
+                loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
+                loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
+                loan.getReviewedBy() != null ? loan.getReviewedBy().getIdentificationNumber() : null,
+                loan.getReviewDate(),
+                loan.getDisbursementDate(),
+                loan.getDisbursementAccount() != null ? loan.getDisbursementAccount().getAccountNumber() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null,
+                loan.getCatalog() != null ? loan.getCatalog().getDescription() : null);
+    }
 }

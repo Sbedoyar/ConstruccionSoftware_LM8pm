@@ -3,6 +3,8 @@ package app.infrastructure.security;
 import app.domain.models.enums.UserStatus;
 import app.domain.models.person.User;
 import app.domain.ports.out.UserPort;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,30 +43,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authorizationHeader.substring(7);
 
-        if (!jwtUtil.isTokenValid(token)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        try {
+            if (jwtUtil.isTokenValid(token)) {
+                String username = jwtUtil.extractUsername(token);
 
-        String username = jwtUtil.extractUsername(token);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    User user = userPort.findByUsername(username);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = userPort.findByUsername(username);
+                    if (user != null && user.getUserStatus() == UserStatus.ACTIVE) {
+                        String role = user.getSystemRole().name();
 
-            if (user != null && user.getUserStatus() == UserStatus.ACTIVE) {
-                String role = user.getSystemRole().name();
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        user,
+                                        null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                                );
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                user,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                        );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                }
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (ExpiredJwtException ex) {
+            SecurityContextHolder.clearContext();
+            writeUnauthorizedResponse(response, "Token expirado. Inicie sesión nuevamente");
+
+        } catch (JwtException | IllegalArgumentException ex) {
+            SecurityContextHolder.clearContext();
+            writeUnauthorizedResponse(response, "Token inválido. Inicie sesión nuevamente");
+        }
+    }
+
+    private void writeUnauthorizedResponse(HttpServletResponse response,
+                                           String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(
+                "{\"status\":401,\"message\":\"" + message + "\",\"errors\":null}"
+        );
     }
 }

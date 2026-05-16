@@ -77,8 +77,7 @@ public class CommercialController {
         commercialUseCase.createAccount(
                 request.getCustomerIdentification(),
                 authenticatedUser.getIdentificationNumber(),
-                account
-        );
+                account);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -95,8 +94,7 @@ public class CommercialController {
         commercialUseCase.createLoan(
                 request.getCustomerIdentification(),
                 authenticatedUser.getIdentificationNumber(),
-                loan
-        );
+                loan);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -110,8 +108,7 @@ public class CommercialController {
 
         Customer customer = commercialUseCase.findAssignedCustomer(
                 authenticatedUser.getIdentificationNumber(),
-                customerIdentification
-        );
+                customerIdentification);
 
         return ResponseEntity.ok(toAssignedCustomerResponse(customer));
     }
@@ -180,6 +177,7 @@ public class CommercialController {
 
         return loan;
     }
+
     private static AssignedCustomerResponse toAssignedCustomerResponse(Customer customer) {
         String customerType = "INDIVIDUAL";
         LocalDate dateOfBirth = null;
@@ -210,8 +208,7 @@ public class CommercialController {
                 customer.getCustomerStatus(),
                 dateOfBirth,
                 legalRepresentativeName,
-                legalRepresentativeIdentification
-        );
+                legalRepresentativeIdentification);
     }
 
     private static CustomerResponse toCustomerResponse(IndividualCustomer customer) {
@@ -223,8 +220,7 @@ public class CommercialController {
                 customer.getAddress(),
                 customer.getDateOfBirth(),
                 customer.getRegistrationDate(),
-                customer.getCustomerStatus()
-        );
+                customer.getCustomerStatus());
     }
 
     private static BusinessCustomerResponse toBusinessCustomerResponse(BusinessCustomer customer) {
@@ -241,8 +237,7 @@ public class CommercialController {
                         : null,
                 customer.getLegalRepresentative() != null
                         ? customer.getLegalRepresentative().getIdentificationNumber()
-                        : null
-        );
+                        : null);
     }
 
     private static AccountResponse toAccountResponse(BankAccount account) {
@@ -255,8 +250,7 @@ public class CommercialController {
                 account.getOpeningDate(),
                 account.getOwner() != null ? account.getOwner().getIdentificationNumber() : null,
                 account.getCatalog() != null ? account.getCatalog().getProductCode() : null,
-                account.getCatalog() != null ? account.getCatalog().getProductName() : null
-        );
+                account.getCatalog() != null ? account.getCatalog().getProductName() : null);
     }
 
     private static LoanResponse toLoanResponse(Loan loan) {
@@ -272,7 +266,6 @@ public class CommercialController {
                 loan.getOwner() != null ? loan.getOwner().getIdentificationNumber() : null,
                 loan.getCreatedBy() != null ? loan.getCreatedBy().getIdentificationNumber() : null,
                 loan.getCatalog() != null ? loan.getCatalog().getProductCode() : null,
-                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null
-        );
+                loan.getCatalog() != null ? loan.getCatalog().getProductName() : null);
     }
 }

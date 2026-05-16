@@ -3,8 +3,10 @@ package app.domain.services;
 import app.domain.exceptions.BusinessException;
 import app.domain.models.enums.RoleType;
 import app.domain.models.person.BusinessCustomer;
+import app.domain.models.person.Customer;
 import app.domain.models.person.IndividualCustomer;
 import app.domain.models.person.User;
+import app.domain.ports.out.CustomerPort;
 import app.domain.ports.out.UserPort;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +18,13 @@ public class CreateUser {
 
     private final UserPort userPort;
     private final PasswordEncoder passwordEncoder;
+    private final CustomerPort customerPort;
 
     @Autowired
-    public CreateUser(UserPort userPort, PasswordEncoder passwordEncoder) {
+    public CreateUser(UserPort userPort, PasswordEncoder passwordEncoder, CustomerPort customerPort) {
         this.userPort = userPort;
         this.passwordEncoder = passwordEncoder;
+        this.customerPort = customerPort;
     }
 
     public void createUser(User user) throws BusinessException {
@@ -85,6 +89,7 @@ public class CreateUser {
             throw new BusinessException("Ya existe un usuario con ese nombre de usuario");
         }
 
+        resolveCustomerAssociation(user);
         validateCustomerRequirement(user);
         validateCustomerTypeByRole(user);
         validateAssignedCustomers(user);
@@ -174,5 +179,28 @@ public class CreateUser {
                 && !user.getAssignedCustomers().isEmpty()) {
             throw new BusinessException("Solo un empleado comercial puede tener clientes asignados");
         }
+    }
+
+    private void resolveCustomerAssociation(User user) {
+
+        if (user.getCustomer() == null) {
+            return;
+        }
+
+        if (user.getCustomer().getIdentificationNumber() == null ||
+                user.getCustomer().getIdentificationNumber().trim().isEmpty()) {
+            user.setCustomer(null);
+            return;
+        }
+
+        String customerIdentification = user.getCustomer().getIdentificationNumber().trim();
+
+        Customer existingCustomer = customerPort.findByIdentificationNumber(customerIdentification);
+
+        if (existingCustomer == null) {
+            throw new BusinessException("No existe un cliente con la identificación asociada");
+        }
+
+        user.setCustomer(existingCustomer);
     }
 }
